@@ -1,7 +1,6 @@
 import { StatusEnum } from "@Constant/enums";
-import { ProjectEntity } from "@app/modules/project/entities";
 
-export class UserDto {
+export class ProjectDto {
   username: string;
 
   phone: string;
@@ -9,6 +8,4 @@ export class UserDto {
   password: string;
 
   status?: StatusEnum;
-
-  projects?: ProjectEntity[];
 }
