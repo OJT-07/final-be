@@ -1,31 +1,24 @@
-import { Exclude } from 'class-transformer';
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, Unique } from 'typeorm';
+import { Exclude } from "class-transformer";
+import { Column, Entity, OneToMany, Unique } from "typeorm";
 
-import { StatusEnum } from '@Constant/enums';
-import { AbstractEntity } from '@Entity/abstract.entity';
-import { RoleEntity } from '@app/modules/role/entities';
+import { StatusEnum } from "@Constant/enums";
+import { AbstractEntity } from "@Entity/abstract.entity";
+import { ProjectEntity } from "@app/modules/project/entities";
 
-@Entity('users')
-@Unique(['phone', 'deletedAt'])
-@Unique(['username', 'deletedAt'])
+@Entity("users")
+@Unique(["phone", "deletedAt"])
+@Unique(["name", "deletedAt"])
 export class UserEntity extends AbstractEntity {
-  @Column({ type: 'varchar', length: 15, nullable: true })
+  @Column({ type: "varchar", length: 50 })
+  name: string;
+
+  @Column({ type: "varchar", length: 15, nullable: true })
   phone: string;
 
-  @Column({ type: 'varchar' })
+  @Column({ type: "varchar" })
   @Exclude()
   password: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  username: string;
-
-  @Column({ type: 'varchar', nullable: true })
-  @Exclude()
-  rfToken: string;
-
-  @ManyToOne(() => RoleEntity, (role) => role.users)
-  role: RoleEntity;
-
-  @Column({ type: 'enum', enum: StatusEnum, default: StatusEnum.ACTIVE })
+  @Column({ type: "enum", enum: StatusEnum, default: StatusEnum.ACTIVE })
   status: StatusEnum;
 }

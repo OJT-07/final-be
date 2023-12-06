@@ -1,6 +1,6 @@
-import { Expose } from 'class-transformer';
-import { IsNotEmpty } from 'class-validator';
-import { RoleEntity } from '@app/modules/role/entities';
+import { ProjectEntity } from "@app/modules/project/entities";
+import { Expose } from "class-transformer";
+import { IsNotEmpty } from "class-validator";
 
 export class CreateUserDto {
   @Expose()
@@ -12,12 +12,5 @@ export class CreateUserDto {
 
   @Expose()
   @IsNotEmpty()
-  username: string;
-
-  @Expose()
-  rfToken?: string;
-
-  @Expose()
-  @IsNotEmpty()
-  role?: RoleEntity;
+  name: string;
 }

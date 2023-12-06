@@ -1,14 +1,14 @@
-import { StatusEnum } from '@Constant/enums';
-import { RoleEntity } from '@app/modules/role/entities';
-import { Expose } from 'class-transformer';
+import { StatusEnum } from "@Constant/enums";
+import { ProjectEntity } from "@app/modules/project/entities";
+import { Expose } from "class-transformer";
 
 export class UpdateUserDto {
   @Expose()
   phone: string;
 
   @Expose()
-  status: StatusEnum;
+  name: string;
 
   @Expose()
-  role: RoleEntity;
+  status: StatusEnum;
 }

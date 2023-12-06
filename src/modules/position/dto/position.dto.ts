@@ -1,6 +1,6 @@
 import { StatusEnum } from "@Constant/enums";
 
-export class UserDto {
+export class PositionDto {
   name: string;
 
   phone: string;
