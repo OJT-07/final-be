@@ -7,8 +7,8 @@ export class UpdateUserDto {
   phone: string;
 
   @Expose()
-  status: StatusEnum;
+  name: string;
 
   @Expose()
-  projects?: ProjectEntity[];
+  status: StatusEnum;
 }

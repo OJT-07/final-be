@@ -17,7 +17,6 @@ import { SkillsModule } from "./modules/skill/skill.module";
     UsersModule,
     EmployeesModule,
     PositionsModule,
-    PositionsModule,
     SkillsModule,
   ],
 })

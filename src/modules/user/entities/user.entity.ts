@@ -7,10 +7,10 @@ import { ProjectEntity } from "@app/modules/project/entities";
 
 @Entity("users")
 @Unique(["phone", "deletedAt"])
-@Unique(["username", "deletedAt"])
+@Unique(["name", "deletedAt"])
 export class UserEntity extends AbstractEntity {
   @Column({ type: "varchar", length: 50 })
-  username: string;
+  name: string;
 
   @Column({ type: "varchar", length: 15, nullable: true })
   phone: string;
@@ -21,7 +21,4 @@ export class UserEntity extends AbstractEntity {
 
   @Column({ type: "enum", enum: StatusEnum, default: StatusEnum.ACTIVE })
   status: StatusEnum;
-
-  @OneToMany(() => ProjectEntity, (project) => project.manager)
-  projects: ProjectEntity[];
 }

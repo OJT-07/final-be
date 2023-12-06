@@ -9,6 +9,7 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { GetUsersDto } from "./dto/get-users.dto";
 import { UserDto } from "./dto/user.dto";
 import { UserEntity } from "./entities";
+import { hashPassword } from "@Constant/hash-password";
 
 @Injectable()
 export class UsersService {
@@ -21,10 +22,10 @@ export class UsersService {
 
   async create(params: CreateUserDto): Promise<ResponseItem<UserDto>> {
     const userExisted = await this.userRepository.findOneBy({
-      username: params.username,
+      name: params.name,
       deletedAt: null,
     });
-    if (userExisted) throw new BadRequestException("Username already exists");
+    if (userExisted) throw new BadRequestException("User name already exists");
 
     const existPhone = await this.userRepository.findOneBy({
       phone: params.phone,
@@ -33,7 +34,12 @@ export class UsersService {
     if (existPhone)
       throw new BadRequestException("Phone number already exists");
 
-    const userParams = this.userRepository.create({ ...params });
+    const newPassword = await hashPassword(params.password);
+
+    const userParams = this.userRepository.create({
+      ...params,
+      password: newPassword,
+    });
 
     const user = await this.userRepository.save({
       ...userParams,
@@ -57,7 +63,6 @@ export class UsersService {
   async getUsers(params: GetUsersDto): Promise<ResponsePaginate<UserDto>> {
     const users = this.userRepository
       .createQueryBuilder("users")
-      .leftJoinAndSelect("users.projects", "projects")
       .where("users.status = ANY(:status)", {
         status: params.status
           ? [params.status]
@@ -68,7 +73,7 @@ export class UsersService {
       .take(params.take);
 
     if (params.search) {
-      users.andWhere("LOWER(users.username) LIKE LOWER(:username)", {
+      users.andWhere("LOWER(users.name) LIKE LOWER(:name)", {
         username: `%${params.search}%`,
       });
     }

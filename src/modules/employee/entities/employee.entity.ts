@@ -5,9 +5,9 @@ import { AbstractEntity } from "@Entity/abstract.entity";
 import { PositionEntity } from "@app/modules/position/entities";
 import { SkillEntity } from "@app/modules/skill/entities";
 
-@Entity("users")
+@Entity("employees")
 @Unique(["phone", "deletedAt"])
-@Unique(["username", "deletedAt"])
+@Unique(["name", "deletedAt"])
 export class EmployeeEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   name: string;

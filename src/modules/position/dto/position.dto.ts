@@ -1,14 +1,11 @@
-import { StatusEnum } from '@Constant/enums';
- 
+import { StatusEnum } from "@Constant/enums";
 
-export class ProjectDto {
-  username: string;
+export class PositionDto {
+  name: string;
 
   phone: string;
 
   password: string;
 
   status?: StatusEnum;
- 
- 
 }

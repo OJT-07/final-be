@@ -1,7 +1,7 @@
 import { StatusEnum } from "@Constant/enums";
 
 export class ProjectDto {
-  username: string;
+  name: string;
 
   phone: string;
 

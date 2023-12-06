@@ -12,9 +12,5 @@ export class CreateUserDto {
 
   @Expose()
   @IsNotEmpty()
-  username: string;
-
-  @Expose()
-  @IsNotEmpty()
-  projects?: ProjectEntity[];
+  name: string;
 }
