@@ -1,4 +1,5 @@
 import { StatusEnum } from "@Constant/enums";
+import { hashPassword } from "@Constant/hash-password";
 import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -9,7 +10,6 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { GetUsersDto } from "./dto/get-users.dto";
 import { UserDto } from "./dto/user.dto";
 import { UserEntity } from "./entities";
-import { hashPassword } from "@Constant/hash-password";
 
 @Injectable()
 export class UsersService {
@@ -93,6 +93,10 @@ export class UsersService {
       where: {
         id,
       },
+<<<<<<< HEAD
+=======
+      // relations: ["projects"],
+>>>>>>> 28f52c1e6d2845d3f206a4fff1911ff569db816b
     });
     if (!user) throw new BadRequestException("User does not exist");
 
