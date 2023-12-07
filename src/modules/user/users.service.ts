@@ -93,7 +93,6 @@ export class UsersService {
       where: {
         id,
       },
-      relations: ["projects"],
     });
     if (!user) throw new BadRequestException("User does not exist");
 

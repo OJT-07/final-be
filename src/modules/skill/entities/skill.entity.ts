@@ -11,6 +11,9 @@ export class SkillEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   description: string;
 
-  @ManyToOne(() => EmployeeEntity, (employee) => employee.skills)
-  employee: EmployeeEntity;
+  @Column({ type: "varchar" })
+  exp: number;
+
+  // @ManyToOne(() => EmployeeEntity, (employee) => employee.skills)
+  // employee: EmployeeEntity;
 }

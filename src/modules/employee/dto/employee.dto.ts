@@ -1,12 +1,19 @@
-import { StatusEnum } from "@Constant/enums";
+import { SkillDto } from "@app/modules/skill/dto/skill.dto";
+import { SkillEntity } from "@app/modules/skill/entities";
 
 export class EmployeeDto {
   name: string;
-  code: string;
+  role: string;
   phone: string;
   date_of_birth: string;
   avatar: string;
-  skills: string;
+  skills: [
+    {
+        name: string,
+        exp: number
+    }
+  ];
   position: string;
-  status?: StatusEnum;
+  department: string;
+  manager: string;
 }
