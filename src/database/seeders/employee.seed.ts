@@ -39,7 +39,7 @@ export class EmployeeSeeder implements Seeder {
       {
         name: "employee02",
         role: "role02",
-        phone: "002",
+        phone: "0021244666",
         date_of_birth: new Date(2001-12-25),
         skills: [
             {
