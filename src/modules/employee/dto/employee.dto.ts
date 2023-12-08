@@ -1,6 +1,3 @@
-import { SkillDto } from "@app/modules/skill/dto/skill.dto";
-import { SkillEntity } from "@app/modules/skill/entities";
-
 export class EmployeeDto {
   name: string;
   role: string;
