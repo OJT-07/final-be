@@ -9,6 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { Repository } from "typeorm";
+import { EmployeeProjectEntity } from "../employee_project/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
@@ -21,7 +22,10 @@ export class ProjectService {
     private readonly configService: ConfigService,
 
     @InjectRepository(ProjectEntity)
-    private readonly projectRepository: Repository<ProjectEntity>
+    private readonly projectRepository: Repository<ProjectEntity>,
+
+    @InjectRepository(EmployeeProjectEntity)
+    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
   ) {}
 
   //GET PROJECTS LIST
@@ -126,11 +130,17 @@ export class ProjectService {
       where: {
         id,
       },
-      // relations: ["projects"],
     });
+
+    const employeeInProject = await this.employeeProjectRepository.find({
+      where: {
+        projectId: id,
+      },
+    });
+
     if (!project) throw new BadRequestException("Project does not exist");
 
-    return new ResponseItem({ ...project }, "Success");
+    return new ResponseItem({ ...project, employeeInProject }, "Success");
   }
 
   //DELETE PROJECT BY ID
