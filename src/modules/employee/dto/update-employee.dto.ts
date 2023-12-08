@@ -10,10 +10,7 @@ export class UpdateEmployeeDto {
   name: string;
 
   @Expose()
-  avatar: string;
-
-  @Expose()
-  date_of_birth: string;
+  date_of_birth: Date;
 
   @Expose()
   skills: [
