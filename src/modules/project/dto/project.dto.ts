@@ -5,9 +5,9 @@ export class ProjectDto {
 
   description?: string;
 
-  start_date?: string;
+  start_date?: Date;
 
-  end_date?: string;
+  end_date?: Date;
 
   technical?: string[];
 

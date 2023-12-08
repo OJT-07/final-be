@@ -57,6 +57,15 @@ export class ProjectService {
 
   //CREATE PROJECT
   async create(params: CreateProjectDto): Promise<ResponseItem<ProjectDto>> {
+    const projectExist = await this.projectRepository.findOne({
+      where: {
+        name: params.name,
+      },
+    });
+
+    if (projectExist) {
+      throw new NotFoundException(`Project name already exist`);
+    }
     const project = await this.projectRepository.save({
       ...params,
       // Use plainToClass with ProjectDto instead of CreateProjectDto
@@ -125,7 +134,6 @@ export class ProjectService {
   }
 
   //DELETE PROJECT BY ID
-
   async deleteProject(id: number): Promise<ResponseItem<null>> {
     const user = await this.projectRepository.findOneBy({
       id,

@@ -9,10 +9,10 @@ export class UpdateProjectDto {
   description?: string;
 
   @Expose()
-  start_date?: string;
+  start_date?: Date;
 
   @Expose()
-  end_date?: string;
+  end_date?: Date;
 
   @Expose()
   technical?: string[];
