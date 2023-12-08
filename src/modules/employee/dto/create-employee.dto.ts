@@ -11,11 +11,8 @@ export class CreateEmployeeDto {
   name: string;
 
   @Expose()
-  avatar: string;
-
-  @Expose()
   @IsNotEmpty()
-  date_of_birth: string;
+  date_of_birth: Date;
 
   @Expose()
   @IsNotEmpty()

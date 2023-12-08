@@ -21,8 +21,7 @@ export class EmployeeSeeder implements Seeder {
         name: "employee01",
         role: "role01",
         phone: "001",
-        date_of_birth: "20/01/2001",
-        avatar: "avatar01",
+        date_of_birth: new Date("2000-12-25"),
         skills: [
             {
                 exp: 10,
@@ -40,9 +39,8 @@ export class EmployeeSeeder implements Seeder {
       {
         name: "employee02",
         role: "role02",
-        phone: "002",
-        date_of_birth: "20/12/2001",
-        avatar: "avatar02",
+        phone: "0021244666",
+        date_of_birth: new Date(2001-12-25),
         skills: [
             {
                 name: "skill1",

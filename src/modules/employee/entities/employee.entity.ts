@@ -12,16 +12,13 @@ export class EmployeeEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   role: string;
 
-  @Column({ type: "varchar" })
+  @Column({ type: "varchar", nullable: true })
   phone: string;
 
-  @Column({ type: "varchar" })
-  date_of_birth: string;
+  @Column({ nullable: true })
+  date_of_birth: Date;
 
-  @Column({ type: "varchar" })
-  avatar: string;
-
-  @Column({ type: "jsonb", nullable: true })
+  @Column({ type: "jsonb" })
   skills: [{ name: string; exp: number }];
 
   @Column({ type: "varchar" })
@@ -30,7 +27,7 @@ export class EmployeeEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   department: string;
 
-  @Column({ type: "varchar" })
+  @Column({ type: "varchar", nullable: true })
   manager: string;
 
   @ManyToMany(() => ProjectEntity)

@@ -2,10 +2,14 @@ import { Expose } from 'class-transformer';
 import { IsNotEmpty } from 'class-validator';
 
 export class CreateEmployeeProjectDto {
-  join_date: string;
+  
+  @Expose()
+  join_date: Date;
 
-  end_date: string;
+  @Expose()
+  end_date: Date;
 
+  @Expose()
   position: string;
 
   @Expose()

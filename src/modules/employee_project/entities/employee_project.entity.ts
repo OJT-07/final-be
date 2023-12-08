@@ -7,14 +7,15 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToO
 
 @Entity('employee_project')
 export class EmployeeProjectEntity {
+  
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
 
-  @Column()
-  join_date: string;
+  @Column({ default: () => 'CURRENT_TIMESTAMP(6)',})
+  join_date: Date;
 
-  @Column()
-  end_date: string;
+  @Column({ nullable: true })
+  end_date: Date;
 
   @Column()
   position: string;
