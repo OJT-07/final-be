@@ -8,6 +8,8 @@ import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
 import { EmployeeProjectDto } from "./dto/employee_project.dto";
 import { plainToClass } from "class-transformer";
 import { GetEmployeeProjectsDto } from "./dto/get-employee_project.dto";
+import { EmployeeEntity } from "../employee/entities";
+import { ProjectEntity } from "../project/entities";
 
 @Injectable()
 export class EmployeeProjectService {
@@ -15,20 +17,41 @@ export class EmployeeProjectService {
     private readonly configService: ConfigService,
 
     @InjectRepository(EmployeeProjectEntity)
-    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
+    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>,
+
+    @InjectRepository(EmployeeEntity)
+    private readonly employeeRepository: Repository<EmployeeEntity>,
+
+    @InjectRepository(ProjectEntity)
+    private readonly projectRepository: Repository<ProjectEntity>
   ) { }
 
   async create(params: CreateEmployeeProjectDto): Promise<ResponseItem<EmployeeProjectDto>> {
-    const employeeExisted = await this.employeeProjectRepository.findOneBy({
-      employeeId: params.employeeId,
-    });
-    if (employeeExisted) throw new BadRequestException("Employee name already exists");
 
-    const projectExisted = await this.employeeProjectRepository.findOneBy({
-      projectId: params.projectId,
+    const EmployeeProjectExisted = await this.employeeProjectRepository
+    .findOne({
+      where: {
+        projectId: params.projectId,
+        employeeId: params.employeeId,
+      },
     });
-    if (projectExisted)
-      throw new BadRequestException("Project number already exists");
+    if (EmployeeProjectExisted) throw new BadRequestException("Employee Project not exists");
+
+    const employeeExisted = await this.employeeRepository
+    .findOne({
+      where: {
+        id: params.employeeId,
+      },
+    });
+    if (!employeeExisted) throw new BadRequestException("Employee name not exists");
+
+    const projectExisted = await this.projectRepository
+    .findOne({
+      where: {
+        id: params.projectId,
+      },
+    });
+    if (!projectExisted) throw new BadRequestException("Project name already exists");
 
     const employeeProject = await this.employeeProjectRepository.save(params)
 
@@ -36,21 +59,14 @@ export class EmployeeProjectService {
   }
 
   async getEmployeeProjects(params: GetEmployeeProjectsDto): Promise<ResponsePaginate<EmployeeProjectDto>> {
-    const queryBuilder: SelectQueryBuilder<EmployeeProjectEntity> = this.employeeProjectRepository.createQueryBuilder("employeeProjects");
-    queryBuilder
-      // .orderBy(`employeeProjects.${params.orderBy}`, params.order)
-      .skip(params.skip)
-      .take(params.take);
-
-    // if (params.search) {
-    //   queryBuilder.andWhere("LOWER(employeeProjects.name) LIKE LOWER(:name)", {
-    //     name: `%${params.search}%`,
-    //   });
-    // }
-
+    const queryBuilder: SelectQueryBuilder<EmployeeProjectEntity> = this.employeeProjectRepository.createQueryBuilder("employeeProjects")
+    .leftJoinAndSelect('employeeProjects.project', 'project')
+    .leftJoinAndSelect('employeeProjects.employee', 'employee');
+   
     const [result, total] = await queryBuilder.getManyAndCount();
 
     const employeeProjectsDto = result.map((employeeProject) => plainToClass(EmployeeProjectDto, employeeProject));
+    
 
     const pageMetaDto = new PageMetaDto({
       itemCount: total,
@@ -59,4 +75,18 @@ export class EmployeeProjectService {
 
     return new ResponsePaginate(employeeProjectsDto, pageMetaDto, "Success");
   }
+
+  async getEmployeeProject(id: number): Promise<ResponseItem<EmployeeProjectDto>> {
+    const employeeProject = await this.employeeProjectRepository.findOne({
+      where: {
+        id,
+      },
+    });
+    if (!employeeProject) throw new BadRequestException("Employee does not exist");
+
+    const employeeProjectDto = plainToClass(EmployeeProjectDto, employeeProject);
+
+    return new ResponseItem(employeeProjectDto, "Success");
+  }
+
 }

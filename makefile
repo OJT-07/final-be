@@ -10,6 +10,9 @@ up-clean:
 stop: 
 	docker compose stop
 
+clear: 
+	docker volume rm $(docker volume ls -q)
+
 down: 
 	docker compose down
 
