@@ -43,10 +43,30 @@ export class ProjectService {
       .skip(params.skip)
       .take(params.take);
 
-    if (params.search) {
+    if (params.name) {
       projects.andWhere("LOWER(projects.name) LIKE LOWER(:name)", {
-        name: `%${params.search}%`,
+        name: `%${params.name}%`,
       });
+    }
+
+    if (params.technical) {
+      const technicalArray = Array.isArray(params.technical)
+        ? params.technical
+        : [params.technical];
+      if (technicalArray.length > 0) {
+        // Use OR to allow for multiple technical values
+        projects.andWhere(
+          technicalArray
+            .map(
+              (tech, index) =>
+                `projects.technical && ARRAY[:tech${index}]::varchar[]`
+            )
+            .join(" OR "),
+          Object.fromEntries(
+            technicalArray.map((tech, index) => [`tech${index}`, tech])
+          )
+        );
+      }
     }
 
     const [result, total] = await projects.getManyAndCount();

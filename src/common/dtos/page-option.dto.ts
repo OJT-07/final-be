@@ -1,17 +1,17 @@
-import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Type } from "class-transformer";
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
-import { Order } from '../constants';
+import { Order } from "../constants";
 
 export abstract class PageOptionsDto {
   @IsString()
-  search?: string = '';
+  search?: string = "";
 
   @IsEnum(Order)
   @IsOptional()
   order?: Order = Order.DESC;
 
-  orderBy?: string = 'id';
+  orderBy?: string = "id";
 
   @Type(() => Number)
   @IsInt()
@@ -24,7 +24,7 @@ export abstract class PageOptionsDto {
   @Min(1)
   @Max(100)
   @IsOptional()
-  take?: number = 10;
+  take?: number = 100;
 
   get skip(): number {
     return (this.page - 1) * this.take;
