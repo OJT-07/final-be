@@ -14,6 +14,7 @@ import { CreateEmployeeProjectDto } from "./dto/create-employee_project.dto";
 import { EmployeeProjectDto } from "./dto/employee_project.dto";
 import { GetEmployeeProjectsDto } from "./dto/get-employee_project.dto";
 import { EmployeeProjectService } from "./employee_project.service";
+import { UpdateEmployeeProjectDto } from "./dto/update-employee_project.dto";
 
 @Controller("employeeProjects")
 export class EmployeeProjectController {
@@ -54,7 +55,7 @@ export class EmployeeProjectController {
   @Patch(":id")
   async updateProject(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateEmployeeProjectDto: EmployeeProjectDto
+    @Body() updateEmployeeProjectDto: UpdateEmployeeProjectDto
   ) {
     return await this.employeeProjectService.update(
       id,

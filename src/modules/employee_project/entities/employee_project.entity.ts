@@ -25,7 +25,7 @@ export class EmployeeProjectEntity {
   @Column({ nullable: true })
   end_date: Date;
 
-  @Column()
+  @Column({ nullable: true })
   position: string;
 
   @Column()

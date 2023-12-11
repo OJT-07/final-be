@@ -9,9 +9,9 @@ services:
     env_file:
       - .env
     ports:
-      - 6001:6001 
+      - 6001:6001
     command: sh -c "yarn start:dev"
-    
+
     volumes:
       - ./:/app
       - /app/node_modules
