@@ -6,7 +6,7 @@ export class EmployeeDto {
   skills: [
     {
         name: string,
-        exp: number
+        exp: string
     }
   ];
   position: string;

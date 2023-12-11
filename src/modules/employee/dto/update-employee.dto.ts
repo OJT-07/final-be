@@ -16,7 +16,7 @@ export class UpdateEmployeeDto {
   skills: [
     {
         name: string,
-        exp: number
+        exp: string
     }
   ];
 

@@ -24,11 +24,11 @@ export class EmployeeSeeder implements Seeder {
         date_of_birth: new Date("2000-12-25"),
         skills: [
             {
-                exp: 10,
+                exp: "10",
                 name: "Skill A"
             },
             {
-                exp: 10,
+                exp: "10",
                 name: "Skill B"
             }
         ],
@@ -44,7 +44,7 @@ export class EmployeeSeeder implements Seeder {
         skills: [
             {
                 name: "skill1",
-                exp: 1
+                exp: "1"
             }
         ],
         position: "position02",

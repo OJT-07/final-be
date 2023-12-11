@@ -19,7 +19,7 @@ export class EmployeeEntity extends AbstractEntity {
   date_of_birth: Date;
 
   @Column({ type: "jsonb" })
-  skills: [{ name: string; exp: number }];
+  skills: [{ name: string; exp: string }];
 
   @Column({ type: "varchar" })
   position: string;

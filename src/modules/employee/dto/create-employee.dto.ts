@@ -16,7 +16,7 @@ export class CreateEmployeeDto {
 
   @Expose()
   @IsNotEmpty()
-  skills: Array<{ name: string; exp:number }>;
+  skills: Array<{ name: string; exp:string }>;
 
   @Expose()
   @IsNotEmpty()
