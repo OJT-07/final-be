@@ -7,16 +7,13 @@ export class CreateProjectDto {
   name: string;
 
   @Expose()
-  @IsNotEmpty()
   description: string;
 
   @Expose()
-  @IsNotEmpty()
-  start_date: string;
+  start_date: Date;
 
   @Expose()
-  @IsNotEmpty()
-  end_date: string;
+  end_date: Date;
 
   @Expose()
   @IsArray()

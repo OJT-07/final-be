@@ -9,3 +9,5 @@ RUN yarn install
 RUN apk update && apk upgrade && apk add --no-cache bash git
 
 EXPOSE 6001
+
+

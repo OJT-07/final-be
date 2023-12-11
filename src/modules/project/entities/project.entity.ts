@@ -9,14 +9,16 @@ export class ProjectEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   name: string;
 
-  @Column({ type: "varchar", length: 500 })
+  @Column({ type: "varchar", length: 500, nullable: true })
   description: string;
 
-  @Column({ type: "varchar", length: 500 })
-  start_date: string;
+  @Column({
+    default: () => "CURRENT_TIMESTAMP(6)",
+  })
+  start_date: Date;
 
-  @Column({ type: "varchar", length: 500 })
-  end_date: string;
+  @Column({ nullable: true })
+  end_date: Date;
 
   @Column({ type: "varchar", length: 500, array: true, default: [] })
   technical: string[];

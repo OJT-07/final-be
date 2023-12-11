@@ -6,5 +6,11 @@ import { StatusProject } from "@Constant/enums";
 export class GetProjectsDto extends PageOptionsDto {
   @IsOptional()
   @IsEnum(StatusProject)
-  status?: StatusProject;
+  status;
+
+  @IsOptional()
+  name?: string;
+
+  @IsOptional()
+  technical: string[];
 }

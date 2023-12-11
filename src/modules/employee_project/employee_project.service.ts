@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EmployeeProjectEntity } from "./entities";
@@ -10,6 +10,7 @@ import { plainToClass } from "class-transformer";
 import { GetEmployeeProjectsDto } from "./dto/get-employee_project.dto";
 import { EmployeeEntity } from "../employee/entities";
 import { ProjectEntity } from "../project/entities";
+import {UpdateEmployeeProjectDto} from "./dto/update-employee_project.dto"
 
 @Injectable()
 export class EmployeeProjectService {
@@ -91,11 +92,75 @@ export class EmployeeProjectService {
         id,
       },
     });
-    if (!employeeProject) throw new BadRequestException("Employee does not exist");
+    if (!employeeProject) throw new BadRequestException("Employee Project does not exist");
 
     const employeeProjectDto = plainToClass(EmployeeProjectDto, employeeProject);
 
     return new ResponseItem(employeeProjectDto, "Success");
   }
+
+ //DELETE EMPLOYEE_PROJECT BY ID
+ async deleteEmployeeProject(id: number): Promise<ResponseItem<null>> {
+  const employee_project = await this.employeeProjectRepository.findOneBy({
+    id,
+  });
+
+  if (!employee_project)
+    throw new BadRequestException("Employee_project does not exist");
+
+  const idDelete = {
+    id: employee_project.id,
+    projectId: employee_project.projectId,
+    employeeId: employee_project.employeeId,
+  };
+  await this.employeeProjectRepository.delete(idDelete);
+
+  return new ResponseItem(null, "Delete Employee_Project successfully");
+}
+
+// UPDATE EMPLOYEE PROJECT
+async update(
+  id: number,
+  params: UpdateEmployeeProjectDto
+): Promise<ResponseItem<EmployeeProjectDto>> {
+  const project = await this.employeeProjectRepository.findOne({
+    where: {
+      id,
+    },
+  });
+
+  if (!project) {
+    throw new NotFoundException(`EMployee_Project not found`);
+  }
+
+  // Perform the update
+  await this.employeeProjectRepository.update(
+    {
+      id: project.id,
+    },
+    {
+      ...params,
+      // Use plainToClass with ProjectDto instead of CreateProjectDto
+      ...plainToClass(ProjectEntity, params, {
+        excludeExtraneousValues: true,
+      }),
+    }
+  );
+
+  // Retrieve the updated project
+  const updatedEmployeeProject = await this.employeeProjectRepository.findOne(
+    {
+      where: {
+        id,
+      },
+    }
+  );
+
+  if (!updatedEmployeeProject) {
+    throw new NotFoundException(`Error retrieving updated employee_project`);
+  }
+
+  return new ResponseItem(updatedEmployeeProject, "Update data successfully");
+}
 
 }
