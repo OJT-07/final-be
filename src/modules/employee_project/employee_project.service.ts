@@ -35,6 +35,7 @@ export class EmployeeProjectService {
         employeeId: params.employeeId,
       },
     });
+    
     if (EmployeeProjectExisted) throw new BadRequestException("Employee Project not exists");
 
     const employeeExisted = await this.employeeRepository
@@ -65,8 +66,16 @@ export class EmployeeProjectService {
    
     const [result, total] = await queryBuilder.getManyAndCount();
 
-    const employeeProjectsDto = result.map((employeeProject) => plainToClass(EmployeeProjectDto, employeeProject));
-    
+    const employeeProjectsDto  = result.map((employeeProject) => plainToClass(EmployeeProjectDto,  {
+      id: employeeProject.id.toString(),
+      join_date: employeeProject.join_date,
+      end_date: employeeProject.end_date,
+      position: employeeProject.position,
+      project: employeeProject.project,
+      employee: employeeProject.employee,
+    }));
+
+
 
     const pageMetaDto = new PageMetaDto({
       itemCount: total,
