@@ -33,7 +33,6 @@ export class EmployeeSeeder implements Seeder {
             }
         ],
         position: "position01",
-        department: "Department01",
         manager: "manager01"
       },
       {
@@ -48,7 +47,6 @@ export class EmployeeSeeder implements Seeder {
             }
         ],
         position: "position02",
-        department: "Department02",
         manager: "manager02"
       },
     ];

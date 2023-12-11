@@ -10,6 +10,5 @@ export class EmployeeDto {
     }
   ];
   position: string;
-  department: string;
   manager: string;
 }

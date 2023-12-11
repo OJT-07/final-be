@@ -24,9 +24,6 @@ export class EmployeeEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   position: string;
 
-  @Column({ type: "varchar" })
-  department: string;
-
   @Column({ type: "varchar", nullable: true })
   manager: string;
 

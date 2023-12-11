@@ -27,9 +27,5 @@ export class CreateEmployeeDto {
 
   @Expose()
   @IsNotEmpty()
-  department: string;
-
-  @Expose()
-  @IsNotEmpty()
   manager: string;
 }

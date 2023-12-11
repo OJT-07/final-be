@@ -24,9 +24,6 @@ export class UpdateEmployeeDto {
   role: string;
 
   @Expose()
-  department: string;
-
-  @Expose()
   manager: string;
 
   @Expose()
