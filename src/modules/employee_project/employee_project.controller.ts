@@ -6,15 +6,15 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
+  Put,
   Query,
 } from "@nestjs/common";
 import { CreateEmployeeProjectDto } from "./dto/create-employee_project.dto";
 import { EmployeeProjectDto } from "./dto/employee_project.dto";
 import { GetEmployeeProjectsDto } from "./dto/get-employee_project.dto";
-import { EmployeeProjectService } from "./employee_project.service";
 import { UpdateEmployeeProjectDto } from "./dto/update-employee_project.dto";
+import { EmployeeProjectService } from "./employee_project.service";
 
 @Controller("employeeProjects")
 export class EmployeeProjectController {
@@ -52,7 +52,7 @@ export class EmployeeProjectController {
   }
 
   //UPDATE PROJECT CONTROLLER
-  @Patch(":id")
+  @Put(":id")
   async updateProject(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateEmployeeProjectDto: UpdateEmployeeProjectDto

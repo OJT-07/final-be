@@ -1,4 +1,4 @@
-import { ResponseItem, ResponsePaginate } from "@app/common/dtos";
+import { ResponseItem } from "@app/common/dtos";
 import {
   Body,
   Controller,
@@ -6,8 +6,8 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
+  Put,
   Query,
 } from "@nestjs/common";
 import { CreateProjectDto } from "./dto/create-project.dto";
@@ -24,7 +24,7 @@ export class ProjectController {
   @Get()
   async getProjects(
     @Query() getProjectsDto: GetProjectsDto
-  ): Promise<ResponsePaginate<ProjectDto>> {
+  ): Promise<ResponseItem<ProjectDto>> {
     return await this.projectService.getProjects(getProjectsDto);
   }
 
@@ -35,7 +35,7 @@ export class ProjectController {
   }
 
   //UPDATE PROJECT CONTROLLER
-  @Patch(":id")
+  @Put(":id")
   async updateProject(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateProjectDto: UpdateProjectDto

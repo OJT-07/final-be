@@ -1,5 +1,5 @@
 import { StatusProject } from "@Constant/enums";
-import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
+import { ResponseItem } from "@app/common/dtos";
 import {
   BadRequestException,
   Injectable,
@@ -9,6 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { Repository } from "typeorm";
+import { EmployeeEntity } from "../employee/entities";
 import { EmployeeProjectEntity } from "../employee_project/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { GetProjectsDto } from "./dto/get-project.dto";
@@ -24,59 +25,22 @@ export class ProjectService {
     @InjectRepository(ProjectEntity)
     private readonly projectRepository: Repository<ProjectEntity>,
 
+    @InjectRepository(EmployeeEntity)
+    private readonly employeeRepository: Repository<EmployeeEntity>,
+
     @InjectRepository(EmployeeProjectEntity)
     private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
   ) {}
 
   //GET PROJECTS LIST
-  async getProjects(
-    params: GetProjectsDto
-  ): Promise<ResponsePaginate<ProjectDto>> {
-    const projects = this.projectRepository
-      .createQueryBuilder("projects")
-      .where("projects.status = ANY(:status)", {
-        status: params.status
-          ? [params.status]
-          : [StatusProject.ACTIVE, StatusProject.PENDING, StatusProject.DONE],
-      })
-      .orderBy(`projects.${params.orderBy}`, params.order)
-      .skip(params.skip)
-      .take(params.take);
+  async getProjects(params: GetProjectsDto): Promise<ResponseItem<ProjectDto>> {
+    const statusArray = params.status
+      ? [params.status]
+      : [StatusProject.ACTIVE, StatusProject.PENDING, StatusProject.DONE];
 
-    if (params.name) {
-      projects.andWhere("LOWER(projects.name) LIKE LOWER(:name)", {
-        name: `%${params.name}%`,
-      });
-    }
+    const projects = await this.projectRepository.find();
 
-    if (params.technical) {
-      const technicalArray = Array.isArray(params.technical)
-        ? params.technical
-        : [params.technical];
-      if (technicalArray.length > 0) {
-        // Use OR to allow for multiple technical values
-        projects.andWhere(
-          technicalArray
-            .map(
-              (tech, index) =>
-                `projects.technical && ARRAY[:tech${index}]::varchar[]`
-            )
-            .join(" OR "),
-          Object.fromEntries(
-            technicalArray.map((tech, index) => [`tech${index}`, tech])
-          )
-        );
-      }
-    }
-
-    const [result, total] = await projects.getManyAndCount();
-
-    const pageMetaDto = new PageMetaDto({
-      itemCount: total,
-      pageOptionsDto: params,
-    });
-
-    return new ResponsePaginate(result, pageMetaDto, "Success");
+    return new ResponseItem(projects, "Get data successfully");
   }
 
   //CREATE PROJECT
@@ -105,6 +69,32 @@ export class ProjectService {
         excludeExtraneousValues: true,
       }),
     });
+
+    if (params.members && params.members.length > 0) {
+      const promises = params.members.map(async (member) => {
+        const employee = await this.employeeRepository.find({
+          where: {
+            id: member.employeeId,
+          },
+        });
+
+        if (employee === null) {
+          console.log(`Employee with ID ${member.employeeId} not exists`);
+        }
+
+        const createEmployeeInProject =
+          await this.employeeProjectRepository.create({
+            employeeId: member.employeeId,
+            projectId: Number(project.id),
+            position: member.position,
+          });
+
+        this.employeeProjectRepository.save(createEmployeeInProject);
+      });
+
+      // Wait for all promises to resolve before moving on
+      await Promise.all(promises);
+    }
 
     return new ResponseItem(project, "Create new data successfully");
   }
@@ -167,7 +157,7 @@ export class ProjectService {
       },
     });
 
-    const employeeInProject = await this.employeeProjectRepository.find({
+    const employeesInProject = await this.employeeProjectRepository.find({
       where: {
         projectId: id,
       },
@@ -175,7 +165,7 @@ export class ProjectService {
 
     if (!project) throw new BadRequestException("Project does not exist");
 
-    return new ResponseItem({ ...project, employeeInProject }, "Success");
+    return new ResponseItem({ ...project, employeesInProject }, "Success");
   }
 
   //DELETE PROJECT BY ID

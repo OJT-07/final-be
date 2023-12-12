@@ -1,5 +1,4 @@
 import { StatusProject } from "@Constant/enums";
-import { CreateProjectDto } from "@app/modules/project/dto/create-project.dto";
 import { ProjectEntity } from "@app/modules/project/entities";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -21,7 +20,7 @@ export class ProjectSeeder implements Seeder {
       `TRUNCATE projects RESTART IDENTITY CASCADE;`
     );
 
-    const projects: CreateProjectDto[] = [
+    const projects = [
       {
         name: "project01",
         description: "123",

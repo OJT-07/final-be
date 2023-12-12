@@ -24,4 +24,8 @@ export class CreateProjectDto {
   @IsOptional()
   @IsEnum(StatusProject)
   status?: StatusProject;
+
+  @Expose()
+  @IsArray()
+  members: { employeeId: number; position: string }[];
 }
