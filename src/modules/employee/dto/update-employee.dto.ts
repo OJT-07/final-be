@@ -21,11 +21,16 @@ export class UpdateEmployeeDto {
   ];
 
   @Expose()
-  role: string;
+  manager: [
+    { 
+      name: string,
+      id:number 
+    }
+  ];
 
   @Expose()
-  manager: string;
+  isManager: boolean;
 
   @Expose()
-  position: string;
+  image: string;
 }

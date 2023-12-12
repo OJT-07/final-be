@@ -19,7 +19,6 @@ export class EmployeeSeeder implements Seeder {
     const employees: CreateEmployeeDto[] = [
       {
         name: "employee01",
-        role: "role01",
         phone: "001",
         date_of_birth: new Date("2000-12-25"),
         skills: [
@@ -32,12 +31,21 @@ export class EmployeeSeeder implements Seeder {
                 name: "Skill B"
             }
         ],
-        position: "position01",
-        manager: "manager01"
+        manager: [
+          {
+            name: "manager01",
+            id: 1
+          },
+          {
+            name: "manager02",
+            id: 2
+          }
+        ],
+        isManager: false,
+        image: "aaaa",
       },
       {
         name: "employee02",
-        role: "role02",
         phone: "0021244666",
         date_of_birth: new Date(2001-12-25),
         skills: [
@@ -46,8 +54,14 @@ export class EmployeeSeeder implements Seeder {
                 exp: "1"
             }
         ],
-        position: "position02",
-        manager: "manager02"
+        manager: [
+          {
+            name: "manager01",
+            id: 1
+          }
+        ],
+        isManager: false,
+        image: "aaaa",
       },
     ];
 

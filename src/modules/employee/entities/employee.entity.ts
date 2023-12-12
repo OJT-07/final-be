@@ -9,8 +9,6 @@ import { ProjectEntity } from "@app/modules/project/entities";
 export class EmployeeEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   name: string;
-  @Column({ type: "varchar" })
-  role: string;
 
   @Column({ type: "varchar", nullable: true })
   phone: string;
@@ -21,11 +19,14 @@ export class EmployeeEntity extends AbstractEntity {
   @Column({ type: "jsonb" })
   skills: [{ name: string; exp: string }];
 
-  @Column({ type: "varchar" })
-  position: string;
+  @Column({ default: false })
+  isManager: boolean;
 
-  @Column({ type: "varchar", nullable: true })
-  manager: string;
+  @Column({ type: "jsonb", nullable: true })
+  manager: [{ name: string; id: number }];
+
+  @Column({ nullable: true })
+  image: string;
 
   @ManyToMany(() => ProjectEntity)
   @JoinTable ({

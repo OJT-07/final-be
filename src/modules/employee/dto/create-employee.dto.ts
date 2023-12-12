@@ -11,7 +11,6 @@ export class CreateEmployeeDto {
   name: string;
 
   @Expose()
-  @IsNotEmpty()
   date_of_birth: Date;
 
   @Expose()
@@ -20,12 +19,12 @@ export class CreateEmployeeDto {
 
   @Expose()
   @IsNotEmpty()
-  role: string;
-
-  @Expose()
-  position: string;
+  manager: Array<{ name: string; id:number }>;
 
   @Expose()
   @IsNotEmpty()
-  manager: string;
+  isManager: boolean;
+
+  @Expose()
+  image: string;
 }

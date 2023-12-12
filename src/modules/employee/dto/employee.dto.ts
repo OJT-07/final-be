@@ -1,6 +1,5 @@
 export class EmployeeDto {
   name: string;
-  role: string;
   phone: string;
   date_of_birth: Date;
   skills: [
@@ -9,6 +8,11 @@ export class EmployeeDto {
         exp: string
     }
   ];
-  position: string;
-  manager: string;
+  manager: [
+    { name: string,
+      id:number 
+    }
+  ];
+  isManager: boolean;
+  image: string;
 }

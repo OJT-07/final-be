@@ -20,6 +20,7 @@ export class EmployeeService {
     private readonly employeeRepository: Repository<EmployeeEntity>
   ) { }
 
+  //CREATE 
   async create(params: CreateEmployeeDto): Promise<ResponseItem<EmployeeDto>> {
     const employeeExisted = await this.employeeRepository.findOneBy({
       name: params.name,
@@ -38,6 +39,8 @@ export class EmployeeService {
 
     return new ResponseItem(plainToClass(EmployeeDto, employee), "Create new data successfully");
   }
+
+ //DELETE
   async deleteUser(id: number): Promise<ResponseItem<null>> {
     const employee = await this.employeeRepository.findOneBy({ id, deletedAt: null });
     if (!employee) throw new BadRequestException("Employee does not exist");
