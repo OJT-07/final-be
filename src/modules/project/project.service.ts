@@ -90,6 +90,14 @@ export class ProjectService {
     if (projectExist) {
       throw new NotFoundException(`Project name already exist`);
     }
+
+    let arrayTechnical = [];
+    for (let i = 0; i < params.technical.length; i++) {
+      arrayTechnical.push(params.technical[i].trim().toUpperCase());
+    }
+
+    params.technical = arrayTechnical;
+
     const project = await this.projectRepository.save({
       ...params,
       // Use plainToClass with ProjectDto instead of CreateProjectDto
@@ -115,6 +123,13 @@ export class ProjectService {
     if (!project) {
       throw new NotFoundException(`Project not found`);
     }
+
+    let arrayTechnical = [];
+    for (let i = 0; i < params.technical.length; i++) {
+      arrayTechnical.push(params.technical[i].trim().toUpperCase());
+    }
+
+    params.technical = arrayTechnical;
 
     // Perform the update
     await this.projectRepository.update(
