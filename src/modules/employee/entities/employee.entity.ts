@@ -22,9 +22,6 @@ export class EmployeeEntity extends AbstractEntity {
   @Column({ default: false })
   isManager: boolean;
 
-  @Column({ type: "jsonb", nullable: true })
-  manager: [{ name: string; id: number }];
-
   @Column({ nullable: true })
   image: string;
 

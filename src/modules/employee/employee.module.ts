@@ -5,7 +5,6 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { EmployeeController } from "./employee.controller";
 import { EmployeeService } from "./employee.service";
 import { EmployeeEntity } from "./entities";
-import { MulterModule } from "@nestjs/platform-express";
 @Module({
   imports: [
     TypeOrmModule.forFeature([EmployeeEntity]),

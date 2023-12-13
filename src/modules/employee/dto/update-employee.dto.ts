@@ -20,13 +20,6 @@ export class UpdateEmployeeDto {
     }
   ];
 
-  @Expose()
-  manager: [
-    { 
-      name: string,
-      id:number 
-    }
-  ];
 
   @Expose()
   isManager: boolean;
