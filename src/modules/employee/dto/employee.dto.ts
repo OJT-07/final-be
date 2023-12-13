@@ -1,3 +1,5 @@
+import { EmployeeEntity } from "../entities";
+
 export class EmployeeDto {
   name: string;
   phone: string;
@@ -8,11 +10,8 @@ export class EmployeeDto {
         exp: string
     }
   ];
-  manager: [
-    { name: string,
-      id:number 
-    }
-  ];
   isManager: boolean;
   image: string;
-}
+
+  }
+

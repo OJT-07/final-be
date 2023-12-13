@@ -31,16 +31,6 @@ export class EmployeeSeeder implements Seeder {
                 name: "Skill B"
             }
         ],
-        manager: [
-          {
-            name: "manager01",
-            id: 1
-          },
-          {
-            name: "manager02",
-            id: 2
-          }
-        ],
         isManager: false,
         image: "aaaa",
       },
@@ -54,13 +44,41 @@ export class EmployeeSeeder implements Seeder {
                 exp: "1"
             }
         ],
-        manager: [
-          {
-            name: "manager01",
-            id: 1
-          }
-        ],
         isManager: false,
+        image: "aaaa",
+      },
+      {
+        name: "employee03",
+        phone: "003",
+        date_of_birth: new Date("2000-12-25"),
+        skills: [
+            {
+                exp: "10",
+                name: "Skill A"
+            },
+            {
+                exp: "10",
+                name: "Skill B"
+            }
+        ],
+        isManager: true,
+        image: "aaaa",
+      },
+      {
+        name: "employee04",
+        phone: "004",
+        date_of_birth: new Date("2000-12-25"),
+        skills: [
+            {
+                exp: "10",
+                name: "Skill A"
+            },
+            {
+                exp: "10",
+                name: "Skill B"
+            }
+        ],
+        isManager: true,
         image: "aaaa",
       },
     ];

@@ -10,6 +10,7 @@ import { EmployeeDto } from "./dto/employee.dto";
 import { plainToClass } from "class-transformer";
 import { GetEmployeesDto } from "./dto/get-employees.dto";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
+import { GetManagersDto } from "./dto/get-manager.dto";
 
 @Injectable()
 export class EmployeeService {
@@ -40,7 +41,7 @@ export class EmployeeService {
     return new ResponseItem(plainToClass(EmployeeDto, employee), "Create new data successfully");
   }
 
- //DELETE
+  //DELETE
   async deleteUser(id: number): Promise<ResponseItem<null>> {
     const employee = await this.employeeRepository.findOneBy({ id, deletedAt: null });
     if (!employee) throw new BadRequestException("Employee does not exist");
@@ -57,9 +58,9 @@ export class EmployeeService {
       .skip(params.skip)
       .take(params.take);
 
-    if (params.search) {
+    if (params.name) {
       queryBuilder.andWhere("LOWER(employees.name) LIKE LOWER(:name)", {
-        name: `%${params.search}%`,
+        name: `%${params.name}%`,
       });
     }
 
@@ -87,6 +88,38 @@ export class EmployeeService {
 
     return new ResponseItem(employeeDto, "Success");
   }
+
+  // Get Manager
+
+  async getManagers(params: GetEmployeesDto): Promise<ResponsePaginate<EmployeeDto>> {
+    const queryBuilder: SelectQueryBuilder<EmployeeEntity> = this.employeeRepository.createQueryBuilder("employees").where("employees.isManager = :isManager", { isManager: true }) // Chỉ lấy những người quản lý
+      .orderBy(`employees.${params.orderBy}`, params.order)
+      .skip(params.skip)
+      .take(params.take);
+
+
+    if (params.name) {
+      queryBuilder.andWhere("LOWER(employees.name) LIKE LOWER(:name)", {
+        name: `%${params.name}%`,
+      });
+    }
+
+    const [result, total] = await queryBuilder.getManyAndCount();
+
+    // Thêm logic để load thông tin quản lý
+    const employeesDto = result.map((employee) => {
+      return plainToClass(EmployeeDto, employee);
+    });
+
+    const pageMetaDto = new PageMetaDto({
+      itemCount: total,
+      pageOptionsDto: params,
+    });
+
+    return new ResponsePaginate(employeesDto, pageMetaDto, "Success");
+  }
+
+
 
   async update(
     id: number,

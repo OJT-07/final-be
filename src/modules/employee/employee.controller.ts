@@ -41,6 +41,11 @@ export class EmployeeController {
     return await this.employeeService.deleteUser(id)
   }
 
+  @Get('managers')
+  async getManagers(@Query() params: GetEmployeesDto): Promise<ResponsePaginate<EmployeeDto>> {
+    return this.employeeService.getManagers(params);
+  }
+
   @Get()
   async getEmployees(
     @Query() getEmployeesDto: GetEmployeesDto): Promise<ResponsePaginate<EmployeeDto>> {
@@ -62,11 +67,14 @@ export class EmployeeController {
     @Body() updateDto: UpdateEmployeeDto,
     @UploadedFile() image: Express.Multer.File
   ) {
+
+    console.log("Entry update")
+
     try {
       if (image) {
         const fileName = `${Date.now()}-${image.originalname}`;
         const filePath = `uploads/${fileName}`;
-        await fs.promises.writeFile(filePath, image.buffer);
+        fs.promises.writeFile(filePath, image.buffer);
         updateDto.image = filePath;
       }
 
