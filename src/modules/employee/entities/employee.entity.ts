@@ -25,6 +25,18 @@ export class EmployeeEntity extends AbstractEntity {
   @Column({ nullable: true })
   image: string;
 
+  @Column({ nullable: false })
+  join_date: Date;
+
+  @Column({ type: "varchar"})
+  address: string;
+
+  @Column({ type: "varchar"})
+  email: string;
+
+  @Column({ type: "varchar", nullable: true})
+  description: string;
+
   @ManyToMany(() => ProjectEntity)
   @JoinTable ({
     name: 'employee_project',

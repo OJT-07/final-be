@@ -33,6 +33,10 @@ export class EmployeeSeeder implements Seeder {
         ],
         isManager: false,
         image: "aaaa",
+        join_date: new Date("2020-10-03"),
+        address: "DaNang",
+        email : "empoyee01@gmail.com",
+        description: "aaaa",
       },
       {
         name: "employee02",
@@ -46,6 +50,10 @@ export class EmployeeSeeder implements Seeder {
         ],
         isManager: false,
         image: "aaaa",
+        join_date: new Date("2019-11-23"),
+        address: "DaNang",
+        email : "empoyee02@gmail.com",
+        description: "aaaa",
       },
       {
         name: "employee03",
@@ -63,6 +71,10 @@ export class EmployeeSeeder implements Seeder {
         ],
         isManager: true,
         image: "aaaa",
+        join_date: new Date("2020-12-03"),
+        address: "DaNang",
+        email : "empoyee03@gmail.com",
+        description: "aaaa",
       },
       {
         name: "employee04",
@@ -80,6 +92,10 @@ export class EmployeeSeeder implements Seeder {
         ],
         isManager: true,
         image: "aaaa",
+        join_date: new Date("2020-09-20"),
+        address: "DaNang",
+        email : "empoyee04@gmail.com",
+        description: "aaaa",
       },
     ];
 

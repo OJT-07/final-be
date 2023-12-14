@@ -24,4 +24,19 @@ export class CreateEmployeeDto {
 
   @Expose()
   image: string;
+
+  @Expose()
+  @IsNotEmpty()
+  join_date: Date;
+
+  @Expose()
+  @IsNotEmpty()
+  address: string;
+
+  @Expose()
+  @IsNotEmpty()
+  email: string;
+
+  @Expose()
+  description: string;
 }

@@ -12,6 +12,10 @@ export class EmployeeDto {
   ];
   isManager: boolean;
   image: string;
+  join_date: Date;
+  address: string;
+  email: string;
+  description: string;
 
   }
 

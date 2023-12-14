@@ -26,4 +26,16 @@ export class UpdateEmployeeDto {
 
   @Expose()
   image: string;
+
+  @Expose()
+  join_date: Date;
+
+  @Expose()
+  address: string;
+
+  @Expose()
+  email: string;
+
+  @Expose()
+  description: string;
 }
