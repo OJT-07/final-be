@@ -60,12 +60,14 @@ export class ProjectService {
       arrayTechnical.push(params.technical[i].trim().toUpperCase());
     }
 
+    const { members, ...projectDataWithoutMembers } = params;
+
     params.technical = arrayTechnical;
 
     const project = await this.projectRepository.save({
-      ...params,
+      ...projectDataWithoutMembers,
       // Use plainToClass with ProjectDto instead of CreateProjectDto
-      ...plainToClass(ProjectDto, params, {
+      ...plainToClass(ProjectDto, projectDataWithoutMembers, {
         excludeExtraneousValues: true,
       }),
     });
