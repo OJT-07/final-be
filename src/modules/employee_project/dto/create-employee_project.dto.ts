@@ -13,10 +13,8 @@ export class CreateEmployeeProjectDto {
   position: string;
 
   @Expose()
-  @IsNotEmpty()
   projectId: number;
 
   @Expose()
-  @IsNotEmpty()
   employeeId: number;
 }

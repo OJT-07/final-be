@@ -35,7 +35,7 @@ export class EmployeeProjectEntity {
 
   @Column()
   @IsNotEmpty()
-  @PrimaryColumn()
+  @PrimaryColumn('uuid')
   employeeId: number;
 
   @ManyToOne(() => ProjectEntity, { eager: true })

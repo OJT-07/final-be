@@ -24,6 +24,7 @@ export class EmployeeProjectController {
 
   @Post()
   async create(@Body() createEmployeeDto: CreateEmployeeProjectDto) {
+    console.log("controller",createEmployeeDto);
     return await this.employeeProjectService.create(createEmployeeDto);
   }
 

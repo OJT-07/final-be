@@ -34,6 +34,7 @@ export class EmployeeProjectService {
   async create(
     params: CreateEmployeeProjectDto
   ): Promise<ResponseItem<EmployeeProjectDto>> {
+    console.log("Serivce",params);
     const EmployeeProjectExisted = await this.employeeProjectRepository.findOne(
       {
         where: {
