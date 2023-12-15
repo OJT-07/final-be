@@ -31,29 +31,34 @@ export class EmployeeProjectService {
     private readonly projectRepository: Repository<ProjectEntity>
   ) {}
 
+  // CREATE
   async create(
     params: CreateEmployeeProjectDto
   ): Promise<ResponseItem<EmployeeProjectDto>> {
-    console.log("Serivce",params);
-    const EmployeeProjectExisted = await this.employeeProjectRepository.findOne(
-      {
-        where: {
-          projectId: params.projectId,
-          employeeId: params.employeeId,
-        },
-      }
+    console.log(
+      "🚀 ~ file: employee_project.service.ts:38 ~ EmployeeProjectService ~ params:",
+      params
     );
+    // const EmployeeProjectExisted = await this.employeeProjectRepository.findOne(
+    //   {
+    //     where: {
+    //       projectId: params.projectId,
+    //       employeeId: params.employeeId,
+    //     },
+    //   }
+    // );
 
-    if (EmployeeProjectExisted)
-      throw new BadRequestException("Employee Project not exists");
+    // if (EmployeeProjectExisted)
+    //   throw new BadRequestException("Employee Project already exists");
 
     const employeeExisted = await this.employeeRepository.findOne({
       where: {
         id: params.employeeId,
       },
     });
+
     if (!employeeExisted)
-      throw new BadRequestException("Employee name not exists");
+      throw new BadRequestException("Employee is not exists");
 
     const projectExisted = await this.projectRepository.findOne({
       where: {
@@ -61,8 +66,7 @@ export class EmployeeProjectService {
       },
     });
 
-    if (!projectExisted)
-      throw new BadRequestException("Project name already exists");
+    if (!projectExisted) throw new BadRequestException("Project is not exists");
 
     const employeeProject = await this.employeeProjectRepository.save(params);
 
@@ -130,14 +134,23 @@ export class EmployeeProjectService {
     if (!employee_project)
       throw new BadRequestException("Employee_project does not exist");
 
-    const idDelete = {
-      id: employee_project.id,
-      projectId: employee_project.projectId,
-      employeeId: employee_project.employeeId,
-    };
-    await this.employeeProjectRepository.delete(idDelete);
+    const deleteEmployee = await this.employeeProjectRepository.update(
+      {
+        id: employee_project.id,
+      },
+      {
+        end_date: new Date(),
+      }
+    );
+    console.log(
+      "🚀 ~ file: employee_project.service.ts:149 ~ EmployeeProjectService ~ deleteEmployeeProject ~ deleteEmployee:",
+      deleteEmployee
+    );
 
-    return new ResponseItem(null, "Delete Employee_Project successfully");
+    return new ResponseItem(
+      null,
+      `Employee has been existed this project at ${new Date()}!`
+    );
   }
 
   // UPDATE EMPLOYEE PROJECT
