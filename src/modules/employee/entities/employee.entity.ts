@@ -1,15 +1,19 @@
-import { BeforeInsert, Column, Entity, JoinTable, ManyToMany, Unique } from "typeorm";
+import { Column, Entity, Generated, JoinTable, ManyToMany, Unique } from "typeorm";
 
 import { ProjectEntity } from "@app/modules/project/entities";
-import { employeeAbstractEntity } from "@Entity/employeeAbstract.entity";
+import { AbstractEntity } from "@Entity/abstract.entity";
 
 @Entity("employees")
 @Unique(["phone", "deletedAt"])
 @Unique(["name", "deletedAt"])
-export class EmployeeEntity extends employeeAbstractEntity{
+export class EmployeeEntity extends AbstractEntity{
 
   @Column({ type: "varchar" })
   name: string;
+
+  @Column()
+  @Generated("uuid")
+  code: string;
 
   @Column({ type: "varchar", nullable: true })
   phone: string;
@@ -29,17 +33,17 @@ export class EmployeeEntity extends employeeAbstractEntity{
   @Column({ nullable: false })
   join_date: Date;
 
-  @Column({ type: "varchar"})
+  @Column({ type: "varchar" })
   address: string;
 
-  @Column({ type: "varchar"})
+  @Column({ type: "varchar" })
   email: string;
 
-  @Column({ type: "varchar", nullable: true})
+  @Column({ type: "varchar", nullable: true })
   description: string;
 
   @ManyToMany(() => ProjectEntity)
-  @JoinTable ({
+  @JoinTable({
     name: 'employee_project',
     joinColumn: {
       name: 'employeeId',
