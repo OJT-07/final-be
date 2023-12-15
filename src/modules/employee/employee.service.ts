@@ -23,11 +23,11 @@ export class EmployeeService {
 
   //CREATE 
   async create(params: CreateEmployeeDto): Promise<ResponseItem<EmployeeDto>> {
-    const emailExisted = await this.employeeRepository.findOneBy({
-      email: params.email,
+    const employeeExisted = await this.employeeRepository.findOneBy({
+      name: params.name,
       deletedAt: null,
     });
-    if (emailExisted) throw new BadRequestException("Email already exists");
+    if (employeeExisted) throw new BadRequestException("Employee name already exists");
 
     const existPhone = await this.employeeRepository.findOneBy({
       phone: params.phone,
