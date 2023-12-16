@@ -1,16 +1,20 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 
+import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, SelectQueryBuilder } from "typeorm";
-import { EmployeeEntity } from "./entities";
-import { CreateEmployeeDto } from "./dto/create-employee.dto";
-import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
-import { EmployeeDto } from "./dto/employee.dto";
 import { plainToClass } from "class-transformer";
+import { Repository, SelectQueryBuilder } from "typeorm";
+import { EmployeeProjectEntity } from "../employee_project/entities";
+import { CreateEmployeeDto } from "./dto/create-employee.dto";
+import { EmployeeDto } from "./dto/employee.dto";
 import { GetEmployeesDto } from "./dto/get-employees.dto";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
-import { GetManagersDto } from "./dto/get-manager.dto";
+import { EmployeeEntity } from "./entities";
 
 @Injectable()
 export class EmployeeService {
@@ -18,16 +22,20 @@ export class EmployeeService {
     private readonly configService: ConfigService,
 
     @InjectRepository(EmployeeEntity)
-    private readonly employeeRepository: Repository<EmployeeEntity>
-  ) { }
+    private readonly employeeRepository: Repository<EmployeeEntity>,
 
-  //CREATE 
+    @InjectRepository(EmployeeProjectEntity)
+    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
+  ) {}
+
+  //CREATE
   async create(params: CreateEmployeeDto): Promise<ResponseItem<EmployeeDto>> {
     const employeeExisted = await this.employeeRepository.findOneBy({
       name: params.name,
       deletedAt: null,
     });
-    if (employeeExisted) throw new BadRequestException("Employee name already exists");
+    if (employeeExisted)
+      throw new BadRequestException("Employee name already exists");
 
     const existPhone = await this.employeeRepository.findOneBy({
       phone: params.phone,
@@ -36,14 +44,20 @@ export class EmployeeService {
     if (existPhone)
       throw new BadRequestException("Phone number already exists");
 
-    const employee = await this.employeeRepository.save(params)
+    const employee = await this.employeeRepository.save(params);
 
-    return new ResponseItem(plainToClass(EmployeeDto, employee), "Create new data successfully");
+    return new ResponseItem(
+      plainToClass(EmployeeDto, employee),
+      "Create new data successfully"
+    );
   }
 
   //DELETE
   async deleteUser(id: number): Promise<ResponseItem<null>> {
-    const employee = await this.employeeRepository.findOneBy({ id, deletedAt: null });
+    const employee = await this.employeeRepository.findOneBy({
+      id,
+      deletedAt: null,
+    });
     if (!employee) throw new BadRequestException("Employee does not exist");
 
     await this.employeeRepository.softDelete(id);
@@ -51,8 +65,11 @@ export class EmployeeService {
     return new ResponseItem(null, "Delete employee successfully");
   }
 
-  async getEmployees(params: GetEmployeesDto): Promise<ResponsePaginate<EmployeeDto>> {
-    const queryBuilder: SelectQueryBuilder<EmployeeEntity> = this.employeeRepository.createQueryBuilder("employees");
+  async getEmployees(
+    params: GetEmployeesDto
+  ): Promise<ResponsePaginate<EmployeeDto>> {
+    const queryBuilder: SelectQueryBuilder<EmployeeEntity> =
+      this.employeeRepository.createQueryBuilder("employees");
     queryBuilder
       .orderBy(`employees.${params.orderBy}`, params.order)
       .skip(params.skip)
@@ -66,7 +83,9 @@ export class EmployeeService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
-    const employeesDto = result.map((employee) => plainToClass(EmployeeDto, employee));
+    const employeesDto = result.map((employee) =>
+      plainToClass(EmployeeDto, employee)
+    );
 
     const pageMetaDto = new PageMetaDto({
       itemCount: total,
@@ -76,6 +95,7 @@ export class EmployeeService {
     return new ResponsePaginate(employeesDto, pageMetaDto, "Success");
   }
 
+  //GET BY ID
   async getEmployee(id: number): Promise<ResponseItem<EmployeeDto>> {
     const employee = await this.employeeRepository.findOne({
       where: {
@@ -84,19 +104,30 @@ export class EmployeeService {
     });
     if (!employee) throw new BadRequestException("Employee does not exist");
 
-    const employeeDto = plainToClass(EmployeeDto, employee);
+    const projectsEmployeeJoined = await this.employeeProjectRepository.find({
+      where: {
+        employeeId: id,
+      },
+    });
 
-    return new ResponseItem(employeeDto, "Success");
+    return new ResponseItem({ ...employee, projectsEmployeeJoined }, "Success");
+
+    // const employeeDto = plainToClass(EmployeeDto, employee);
+    //return new ResponseItem(employeeDto, "Success");
   }
 
   // Get Manager
 
-  async getManagers(params: GetEmployeesDto): Promise<ResponsePaginate<EmployeeDto>> {
-    const queryBuilder: SelectQueryBuilder<EmployeeEntity> = this.employeeRepository.createQueryBuilder("employees").where("employees.isManager = :isManager", { isManager: true }) // Chỉ lấy những người quản lý
-      .orderBy(`employees.${params.orderBy}`, params.order)
-      .skip(params.skip)
-      .take(params.take);
-
+  async getManagers(
+    params: GetEmployeesDto
+  ): Promise<ResponsePaginate<EmployeeDto>> {
+    const queryBuilder: SelectQueryBuilder<EmployeeEntity> =
+      this.employeeRepository
+        .createQueryBuilder("employees")
+        .where("employees.isManager = :isManager", { isManager: true }) // Chỉ lấy những người quản lý
+        .orderBy(`employees.${params.orderBy}`, params.order)
+        .skip(params.skip)
+        .take(params.take);
 
     if (params.name) {
       queryBuilder.andWhere("LOWER(employees.name) LIKE LOWER(:name)", {
@@ -119,8 +150,7 @@ export class EmployeeService {
     return new ResponsePaginate(employeesDto, pageMetaDto, "Success");
   }
 
-
-
+  //UPDATE
   async update(
     id: number,
     params: UpdateEmployeeDto
