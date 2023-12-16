@@ -72,7 +72,7 @@ export class EmployeeController {
 
     try {
       if (image) {
-        const fileName = `${Date.now()}-${image.originalname}`;
+        const fileName = `${Date.now()}-${image.originalname.replace(/\s/g, '_')}`;
         const filePath = `uploads/${fileName}`;
         fs.promises.writeFile(filePath, image.buffer);
         updateDto.image = filePath;

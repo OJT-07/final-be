@@ -5,6 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import 'dotenv/config';
 
 import { AppModule } from '@app/app.module';
+import express from 'express';
+import { join } from 'path';
 
 async function bootstrap() {
   const appOptions = { cors: true };
@@ -17,6 +19,8 @@ async function bootstrap() {
 
   // Prefix
   app.setGlobalPrefix('api');
+
+  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
   const options = new DocumentBuilder()
     .setTitle('Final Project')
