@@ -1,11 +1,13 @@
 import { StatusEnum } from "@Constant/enums";
 
 export class UserDto {
-  name: string;
+  name?: string;
 
-  phone: string;
+  phone?: string;
 
-  password: string;
+  password?: string;
 
   status?: StatusEnum;
+
+  token?: string;
 }

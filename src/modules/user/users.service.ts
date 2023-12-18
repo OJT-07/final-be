@@ -3,11 +3,14 @@ import { hashPassword } from "@Constant/hash-password";
 import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
+import * as bcrypt from "bcrypt";
 import { plainToClass } from "class-transformer";
 import { Repository } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { GetUsersDto } from "./dto/get-users.dto";
+import { LoginUserDto } from "./dto/update-user.dto copy";
 import { UserDto } from "./dto/user.dto";
 import { UserEntity } from "./entities";
 
@@ -15,6 +18,7 @@ import { UserEntity } from "./entities";
 export class UsersService {
   constructor(
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
 
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>
@@ -49,6 +53,34 @@ export class UsersService {
     });
 
     return new ResponseItem(user, "Create new data successfully");
+  }
+
+  async login(params: LoginUserDto): Promise<ResponseItem<UserDto>> {
+    const userExisted = await this.userRepository.findOneBy({
+      phone: params.phone,
+      deletedAt: null,
+    });
+
+    if (!userExisted) {
+      throw new BadRequestException("User name not exists");
+    }
+
+    const isPasswordCorrect = await comparePassword(
+      params.password,
+      userExisted.password
+    );
+
+    if (!isPasswordCorrect) {
+      throw new BadRequestException("Password is not correct!");
+    }
+
+    // Generate JWT token
+    const token = this.jwtService.sign({
+      sub: userExisted.id,
+      username: userExisted.phone,
+    });
+
+    return new ResponseItem({ token }, "Login successful");
   }
 
   async deleteUser(id: number): Promise<ResponseItem<null>> {
@@ -98,4 +130,10 @@ export class UsersService {
 
     return new ResponseItem({ ...user }, "Success");
   }
+}
+async function comparePassword(
+  enteredPassword: string,
+  hashedPassword: string
+): Promise<boolean> {
+  return bcrypt.compare(enteredPassword, hashedPassword);
 }

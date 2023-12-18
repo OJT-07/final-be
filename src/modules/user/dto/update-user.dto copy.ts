@@ -1,15 +1,12 @@
 import { Expose } from "class-transformer";
 import { IsNotEmpty } from "class-validator";
 
-export class CreateUserDto {
+export class LoginUserDto {
   @Expose()
+  @IsNotEmpty()
   phone: string;
 
   @Expose()
   @IsNotEmpty()
   password: string;
-
-  @Expose()
-  @IsNotEmpty()
-  name: string;
 }

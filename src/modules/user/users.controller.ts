@@ -1,3 +1,4 @@
+import { ResponseItem, ResponsePaginate } from "@app/common/dtos";
 import {
   Body,
   Controller,
@@ -5,16 +6,12 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
   Query,
-  UseGuards,
 } from "@nestjs/common";
-import { UsersService } from "./users.service";
-import { ResponseItem, ResponsePaginate } from "@app/common/dtos";
-import { UserDto } from "./dto/user.dto";
 import { GetUsersDto } from "./dto/get-users.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import { UserDto } from "./dto/user.dto";
+import { UsersService } from "./users.service";
 
 @Controller("users")
 export class UsersController {
@@ -44,5 +41,10 @@ export class UsersController {
     @Param("id", ParseIntPipe) id: number
   ): Promise<ResponseItem<UserDto>> {
     return await this.usersService.getUser(id);
+  }
+
+  @Post("login")
+  async login(@Body() loginUserDto) {
+    return await this.usersService.login(loginUserDto);
   }
 }
