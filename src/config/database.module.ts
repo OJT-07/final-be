@@ -16,7 +16,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
         password: configService.get<string>("DB_POSTGRE_PASSWORD"),
         synchronize: configService.get<boolean>("DB_POSTGRE_SYNCHRONIZE"),
         logging: configService.get<boolean>("DB_POSTGRE_LOGGING"),
-        ssl: true,
+        // ssl: true,
         entities: [__dirname + "/../modules/**/**/*.entity{.ts,.js}"],
       }),
     }),

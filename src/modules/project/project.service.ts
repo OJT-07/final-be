@@ -10,12 +10,12 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { Repository } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
-import { EmployeeProjectEntity } from "../employee_project/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectEntity } from "./entities";
+import { HistoriesEntity } from "../history/entities";
 
 @Injectable()
 export class ProjectService {
@@ -28,16 +28,12 @@ export class ProjectService {
     @InjectRepository(EmployeeEntity)
     private readonly employeeRepository: Repository<EmployeeEntity>,
 
-    @InjectRepository(EmployeeProjectEntity)
-    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
+    @InjectRepository(HistoriesEntity)
+    private readonly historiesEntity: Repository<HistoriesEntity>
   ) {}
 
   //GET PROJECTS LIST
   async getProjects(params: GetProjectsDto): Promise<ResponseItem<ProjectDto>> {
-    const statusArray = params.status
-      ? [params.status]
-      : [StatusProject.ACTIVE, StatusProject.PENDING, StatusProject.DONE];
-
     const projects = await this.projectRepository.find();
 
     return new ResponseItem(projects, "Get data successfully");
@@ -73,29 +69,29 @@ export class ProjectService {
     });
 
     if (params.members && params.members.length > 0) {
-      const promises = params.members.map(async (member) => {
-        const employee = await this.employeeRepository.find({
+      for (let i = 0; i < params.members.length; i++) {
+        const employee = await this.employeeRepository.findOne({
           where: {
-            id: member.employeeId,
+            id: params.members[i].employeeId,
           },
         });
 
-        if (employee === null) {
-          console.log(`Employee with ID ${member.employeeId} not exists`);
+        if (!employee) {
+          throw new NotFoundException(
+            `Employee with ID ${params.members[i].employeeId} not exists`
+          );
         }
 
-        const createEmployeeInProject =
-          await this.employeeProjectRepository.create({
-            employeeId: member.employeeId,
-            projectId: Number(project.id),
-            position: member.position,
-          });
+        const newHistory = {
+          employee: employee,
+          project: project,
+          position: params.members[i].position,
+        };
 
-        this.employeeProjectRepository.save(createEmployeeInProject);
-      });
+        const createHistory = await this.historiesEntity.create(newHistory);
 
-      // Wait for all promises to resolve before moving on
-      await Promise.all(promises);
+        this.historiesEntity.save(createHistory);
+      }
     }
 
     return new ResponseItem(project, "Create new data successfully");
@@ -159,17 +155,18 @@ export class ProjectService {
       where: {
         id,
       },
+      relations: ["employee"],
     });
 
-    const employeesInProject = await this.employeeProjectRepository.find({
-      where: {
-        projectId: id,
-      },
-    });
+    // const employeesInProject = await this.employeeProjectRepository.find({
+    //   where: {
+    //     projectId: id,
+    //   },
+    // });
 
     if (!project) throw new BadRequestException("Project does not exist");
 
-    return new ResponseItem({ ...project, employeesInProject }, "Success");
+    return new ResponseItem({ ...project }, "Success");
   }
 
   //DELETE PROJECT BY ID

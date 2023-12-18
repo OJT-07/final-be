@@ -7,22 +7,22 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
-import { Repository, SelectQueryBuilder } from "typeorm";
+import { IsNull, Repository, SelectQueryBuilder } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
 import { ProjectEntity } from "../project/entities";
 import { CreateEmployeeProjectDto } from "./dto/create-employee_project.dto";
 import { EmployeeProjectDto } from "./dto/employee_project.dto";
 import { GetEmployeeProjectsDto } from "./dto/get-employee_project.dto";
 import { UpdateEmployeeProjectDto } from "./dto/update-employee_project.dto";
-import { EmployeeProjectEntity } from "./entities";
+import { HistoriesEntity } from "./entities";
 
 @Injectable()
-export class EmployeeProjectService {
+export class HistoriesService {
   constructor(
     private readonly configService: ConfigService,
 
-    @InjectRepository(EmployeeProjectEntity)
-    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>,
+    @InjectRepository(HistoriesEntity)
+    private readonly historiesRepository: Repository<HistoriesEntity>,
 
     @InjectRepository(EmployeeEntity)
     private readonly employeeRepository: Repository<EmployeeEntity>,
@@ -34,37 +34,37 @@ export class EmployeeProjectService {
   async create(
     params: CreateEmployeeProjectDto
   ): Promise<ResponseItem<EmployeeProjectDto>> {
-    console.log("Serivce",params);
-    const EmployeeProjectExisted = await this.employeeProjectRepository.findOne(
-      {
-        where: {
-          projectId: params.projectId,
-          employeeId: params.employeeId,
-        },
-      }
-    );
+    const historyExisted = await this.historiesRepository.findOne({
+      where: {
+        deletedAt: null,
+      },
+    });
 
-    if (EmployeeProjectExisted)
-      throw new BadRequestException("Employee Project not exists");
+    if (historyExisted)
+      throw new BadRequestException("The history is on a project");
 
     const employeeExisted = await this.employeeRepository.findOne({
       where: {
-        id: params.employeeId,
+        id: params.employee,
       },
     });
     if (!employeeExisted)
-      throw new BadRequestException("Employee name not exists");
+      throw new BadRequestException("Employee does not exists");
 
     const projectExisted = await this.projectRepository.findOne({
       where: {
-        id: params.projectId,
+        id: params.project,
       },
     });
 
     if (!projectExisted)
-      throw new BadRequestException("Project name already exists");
+      throw new BadRequestException("Project does not exists");
 
-    const employeeProject = await this.employeeProjectRepository.save(params);
+    const employeeProject = await this.historiesRepository.save({
+      ...params,
+      employee: employeeExisted,
+      project: projectExisted,
+    });
 
     return new ResponseItem(
       plainToClass(EmployeeProjectDto, employeeProject),
@@ -75,8 +75,8 @@ export class EmployeeProjectService {
   async getEmployeeProjects(
     params: GetEmployeeProjectsDto
   ): Promise<ResponsePaginate<EmployeeProjectDto>> {
-    const queryBuilder: SelectQueryBuilder<EmployeeProjectEntity> =
-      this.employeeProjectRepository
+    const queryBuilder: SelectQueryBuilder<HistoriesEntity> =
+      this.historiesRepository
         .createQueryBuilder("employeeProjects")
         .leftJoinAndSelect("employeeProjects.project", "project")
         .leftJoinAndSelect("employeeProjects.employee", "employee");
@@ -88,7 +88,6 @@ export class EmployeeProjectService {
         id: employeeProject.id.toString(),
         join_date: employeeProject.join_date,
         end_date: employeeProject.end_date,
-        position: employeeProject.position,
         project: employeeProject.project,
         employee: employeeProject.employee,
       })
@@ -105,7 +104,7 @@ export class EmployeeProjectService {
   async getEmployeeProject(
     id: number
   ): Promise<ResponseItem<EmployeeProjectDto>> {
-    const employeeProject = await this.employeeProjectRepository.findOne({
+    const employeeProject = await this.historiesRepository.findOne({
       where: {
         id,
       },
@@ -121,9 +120,8 @@ export class EmployeeProjectService {
     return new ResponseItem(employeeProjectDto, "Success");
   }
 
-  //DELETE EMPLOYEE_PROJECT BY ID
   async deleteEmployeeProject(id: number): Promise<ResponseItem<null>> {
-    const employee_project = await this.employeeProjectRepository.findOneBy({
+    const employee_project = await this.historiesRepository.findOneBy({
       id,
     });
 
@@ -132,20 +130,19 @@ export class EmployeeProjectService {
 
     const idDelete = {
       id: employee_project.id,
-      projectId: employee_project.projectId,
-      employeeId: employee_project.employeeId,
+      // projectId: employee_project.projectId,
+      // employeeId: employee_project.employeeId,
     };
-    await this.employeeProjectRepository.delete(idDelete);
+    await this.historiesRepository.delete(idDelete);
 
     return new ResponseItem(null, "Delete Employee_Project successfully");
   }
 
-  // UPDATE EMPLOYEE PROJECT
   async update(
     id: number,
     params: UpdateEmployeeProjectDto
-  ): Promise<ResponseItem<EmployeeProjectDto>> {
-    const project = await this.employeeProjectRepository.findOne({
+  ): Promise<ResponseItem<HistoriesEntity>> {
+    const project = await this.historiesRepository.findOne({
       where: {
         id,
       },
@@ -156,7 +153,7 @@ export class EmployeeProjectService {
     }
 
     // Perform the update
-    await this.employeeProjectRepository.update(
+    await this.historiesRepository.update(
       {
         id: project.id,
       },
@@ -170,13 +167,11 @@ export class EmployeeProjectService {
     );
 
     // Retrieve the updated project
-    const updatedEmployeeProject = await this.employeeProjectRepository.findOne(
-      {
-        where: {
-          id,
-        },
-      }
-    );
+    const updatedEmployeeProject = await this.historiesRepository.findOne({
+      where: {
+        id,
+      },
+    });
 
     if (!updatedEmployeeProject) {
       throw new NotFoundException(`Error retrieving updated employee_project`);

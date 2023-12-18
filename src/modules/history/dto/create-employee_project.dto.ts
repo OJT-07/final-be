@@ -1,8 +1,7 @@
-import { Expose } from 'class-transformer';
-import { IsNotEmpty } from 'class-validator';
+import { Expose } from "class-transformer";
+import { IsNotEmpty } from "class-validator";
 
 export class CreateEmployeeProjectDto {
-  
   @Expose()
   join_date: Date;
 
@@ -13,8 +12,8 @@ export class CreateEmployeeProjectDto {
   position: string;
 
   @Expose()
-  projectId: number;
+  project: number;
 
   @Expose()
-  employeeId: number;
+  employee: number;
 }

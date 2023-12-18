@@ -12,6 +12,10 @@ import { UserEntity } from "./modules/user/entities/user.entity";
 import { ProjectEntity } from "./modules/project/entities/project.entity";
 
 seeder({
-  imports: [DatabaseModule, TypeOrmModule.forFeature([UserEntity, EmployeeEntity, ProjectEntity]), HttpModule],
+  imports: [
+    DatabaseModule,
+    TypeOrmModule.forFeature([UserEntity, EmployeeEntity, ProjectEntity]),
+    HttpModule,
+  ],
   providers: [ConfigService],
 }).run([UserSeeder, EmployeeSeeder, ProjectSeeder]);

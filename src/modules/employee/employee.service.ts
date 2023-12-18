@@ -9,12 +9,13 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { Repository, SelectQueryBuilder } from "typeorm";
-import { EmployeeProjectEntity } from "../employee_project/entities";
+ 
 import { CreateEmployeeDto } from "./dto/create-employee.dto";
 import { EmployeeDto } from "./dto/employee.dto";
 import { GetEmployeesDto } from "./dto/get-employees.dto";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
 import { EmployeeEntity } from "./entities";
+import { HistoriesEntity } from "../history/entities";
 
 @Injectable()
 export class EmployeeService {
@@ -24,8 +25,8 @@ export class EmployeeService {
     @InjectRepository(EmployeeEntity)
     private readonly employeeRepository: Repository<EmployeeEntity>,
 
-    @InjectRepository(EmployeeProjectEntity)
-    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
+    @InjectRepository(HistoriesEntity)
+    private readonly historiesRepository: Repository<HistoriesEntity>
   ) {}
 
   //CREATE
@@ -101,16 +102,11 @@ export class EmployeeService {
       where: {
         id,
       },
+      relations:['histories']
     });
     if (!employee) throw new BadRequestException("Employee does not exist");
 
-    const projectsEmployeeJoined = await this.employeeProjectRepository.find({
-      where: {
-        employeeId: id,
-      },
-    });
-
-    return new ResponseItem({ ...employee, projectsEmployeeJoined }, "Success");
+    return new ResponseItem(employee , "Success");
 
     // const employeeDto = plainToClass(EmployeeDto, employee);
     //return new ResponseItem(employeeDto, "Success");

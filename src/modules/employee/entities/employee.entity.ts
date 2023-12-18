@@ -1,13 +1,12 @@
-import { Column, Entity, Generated, JoinTable, ManyToMany, Unique } from "typeorm";
+import { Column, Entity, Generated, OneToMany, Unique } from "typeorm";
 
-import { ProjectEntity } from "@app/modules/project/entities";
 import { AbstractEntity } from "@Entity/abstract.entity";
+import { HistoriesEntity } from "@app/modules/history/entities";
 
 @Entity("employees")
 @Unique(["phone", "deletedAt"])
 @Unique(["name", "deletedAt"])
-export class EmployeeEntity extends AbstractEntity{
-
+export class EmployeeEntity extends AbstractEntity {
   @Column({ type: "varchar" })
   name: string;
 
@@ -42,17 +41,6 @@ export class EmployeeEntity extends AbstractEntity{
   @Column({ type: "varchar", nullable: true })
   description: string;
 
-  @ManyToMany(() => ProjectEntity)
-  @JoinTable({
-    name: 'employee_project',
-    joinColumn: {
-      name: 'employeeId',
-      referencedColumnName: 'id'
-    },
-    inverseJoinColumn: {
-      name: 'projectId',
-      referencedColumnName: 'id',
-    },
-  })
-  projects: ProjectEntity[];
+  @OneToMany(() => HistoriesEntity, (history) => history.employee)
+  histories: HistoriesEntity[];
 }

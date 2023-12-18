@@ -14,25 +14,22 @@ import { CreateEmployeeProjectDto } from "./dto/create-employee_project.dto";
 import { EmployeeProjectDto } from "./dto/employee_project.dto";
 import { GetEmployeeProjectsDto } from "./dto/get-employee_project.dto";
 import { UpdateEmployeeProjectDto } from "./dto/update-employee_project.dto";
-import { EmployeeProjectService } from "./employee_project.service";
+import { HistoriesService } from "./history.service";
 
 @Controller("employeeProjects")
-export class EmployeeProjectController {
-  constructor(
-    private readonly employeeProjectService: EmployeeProjectService
-  ) {}
+export class HistoriesController {
+  constructor(private readonly historiesService: HistoriesService) {}
 
   @Post()
   async create(@Body() createEmployeeDto: CreateEmployeeProjectDto) {
-    console.log("controller",createEmployeeDto);
-    return await this.employeeProjectService.create(createEmployeeDto);
+    return await this.historiesService.create(createEmployeeDto);
   }
 
   @Get()
   async getEmployeeProjects(
     @Query() getEmployeeProjectsDto: GetEmployeeProjectsDto
   ): Promise<ResponsePaginate<EmployeeProjectDto>> {
-    return await this.employeeProjectService.getEmployeeProjects(
+    return await this.historiesService.getEmployeeProjects(
       getEmployeeProjectsDto
     );
   }
@@ -41,7 +38,7 @@ export class EmployeeProjectController {
   async getEmployeeProject(
     @Param("id", ParseIntPipe) id: number
   ): Promise<ResponseItem<EmployeeProjectDto>> {
-    return await this.employeeProjectService.getEmployeeProject(id);
+    return await this.historiesService.getEmployeeProject(id);
   }
 
   //DELETE PROJECT CONTROLLER
@@ -49,7 +46,7 @@ export class EmployeeProjectController {
   async deleteProject(
     @Param("id", ParseIntPipe) id: number
   ): Promise<ResponseItem<null>> {
-    return await this.employeeProjectService.deleteEmployeeProject(id);
+    return await this.historiesService.deleteEmployeeProject(id);
   }
 
   //UPDATE PROJECT CONTROLLER
@@ -58,9 +55,6 @@ export class EmployeeProjectController {
     @Param("id", ParseIntPipe) id: number,
     @Body() updateEmployeeProjectDto: UpdateEmployeeProjectDto
   ) {
-    return await this.employeeProjectService.update(
-      id,
-      updateEmployeeProjectDto
-    );
+    return await this.historiesService.update(id, updateEmployeeProjectDto);
   }
 }
