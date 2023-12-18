@@ -117,11 +117,13 @@ export class ProjectService {
     }
 
     let arrayTechnical = [];
-    for (let i = 0; i < params.technical.length; i++) {
-      arrayTechnical.push(params.technical[i].trim().toUpperCase());
-    }
 
-    params.technical = arrayTechnical;
+    if (params.technical) {
+      for (let i = 0; i < params.technical.length; i++) {
+        arrayTechnical.push(params.technical[i].trim().toUpperCase());
+      }
+      params.technical = arrayTechnical;
+    }
 
     // Perform the update
     await this.projectRepository.update(
