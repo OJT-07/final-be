@@ -8,10 +8,8 @@ import {
   ParseIntPipe,
   Post,
   Put,
-  Query,
 } from "@nestjs/common";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectService } from "./project.service";
@@ -22,10 +20,8 @@ export class ProjectController {
 
   //GET PROJECT CONTROLLER
   @Get()
-  async getProjects(
-    @Query() getProjectsDto: GetProjectsDto
-  ): Promise<ResponseItem<ProjectDto>> {
-    return await this.projectService.getProjects(getProjectsDto);
+  async getProjects(): Promise<ResponseItem<ProjectDto>> {
+    return await this.projectService.getProjects();
   }
 
   //POST PROJECT CONTROLLER

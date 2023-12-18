@@ -8,7 +8,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { GetProjectsDto } from "./dto/get-project.dto";
@@ -32,14 +32,12 @@ export class ProjectService {
     private readonly historiesEntity: Repository<HistoriesEntity>
   ) {}
 
-  //GET PROJECTS LIST
-  async getProjects(params: GetProjectsDto): Promise<ResponseItem<ProjectDto>> {
+  async getProjects(): Promise<ResponseItem<ProjectDto>> {
     const projects = await this.projectRepository.find();
 
     return new ResponseItem(projects, "Get data successfully");
   }
 
-  //CREATE PROJECT
   async create(params: CreateProjectDto): Promise<ResponseItem<ProjectDto>> {
     const projectExist = await this.projectRepository.findOne({
       where: {
@@ -62,7 +60,6 @@ export class ProjectService {
 
     const project = await this.projectRepository.save({
       ...projectDataWithoutMembers,
-      // Use plainToClass with ProjectDto instead of CreateProjectDto
       ...plainToClass(ProjectDto, projectDataWithoutMembers, {
         excludeExtraneousValues: true,
       }),
@@ -91,13 +88,17 @@ export class ProjectService {
         const createHistory = await this.historiesEntity.create(newHistory);
 
         this.historiesEntity.save(createHistory);
+
+        await this.projectRepository.save({
+          ...project,
+          employees: [employee],
+        });
       }
     }
 
     return new ResponseItem(project, "Create new data successfully");
   }
 
-  // UPDATE PROJECT
   async update(
     id: number,
     params: UpdateProjectDto
@@ -106,76 +107,52 @@ export class ProjectService {
       where: {
         id,
       },
+      relations: ["employees"],
     });
 
     if (!project) {
       throw new NotFoundException(`Project not found`);
     }
 
-    let arrayTechnical = [];
-
-    if (params.technical) {
-      for (let i = 0; i < params.technical.length; i++) {
-        arrayTechnical.push(params.technical[i].trim().toUpperCase());
-      }
-      params.technical = arrayTechnical;
-    }
-
-    // Perform the update
-    await this.projectRepository.update(
-      {
-        id: project.id,
-      },
-      {
-        ...params,
-        // Use plainToClass with ProjectDto instead of CreateProjectDto
-        ...plainToClass(ProjectEntity, params, {
-          excludeExtraneousValues: true,
-        }),
-      }
+    const arrayTechnical = params?.technical?.map((item) =>
+      item.trim().toUpperCase()
     );
 
-    // Retrieve the updated project
-    const updatedProject = await this.projectRepository.findOne({
-      where: {
-        id,
-      },
+    const employees = await this.employeeRepository.findBy({
+      id: In(params.employeeIds),
     });
 
-    if (!updatedProject) {
-      throw new NotFoundException(`Error retrieving updated project`);
-    }
+    const result = await this.projectRepository.save({
+      ...project,
+      technical: arrayTechnical,
+      ...plainToClass(UpdateProjectDto, params, {
+        excludeExtraneousValues: true,
+      }),
+      employees,
+    });
 
-    return new ResponseItem(updatedProject, "Update data successfully");
+    return new ResponseItem(result, "Update data successfully");
   }
 
-  //GET PROJECT BY ID
   async getProject(id: number): Promise<ResponseItem<ProjectDto>> {
     const project = await this.projectRepository.findOne({
       where: {
         id,
       },
-      relations: ["employee"],
+      relations: ["employees"],
     });
-
-    // const employeesInProject = await this.employeeProjectRepository.find({
-    //   where: {
-    //     projectId: id,
-    //   },
-    // });
 
     if (!project) throw new BadRequestException("Project does not exist");
 
     return new ResponseItem({ ...project }, "Success");
   }
 
-  //DELETE PROJECT BY ID
   async deleteProject(id: number): Promise<ResponseItem<null>> {
-    const user = await this.projectRepository.findOneBy({
+    const project = await this.projectRepository.findOneBy({
       id,
       deletedAt: null,
     });
-    if (!user) throw new BadRequestException("User does not exist");
+    if (!project) throw new BadRequestException("Project does not exist");
 
     await this.projectRepository.softDelete(id);
 

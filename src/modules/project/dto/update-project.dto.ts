@@ -18,6 +18,9 @@ export class UpdateProjectDto {
   technical?: string[];
 
   @Expose()
+  employeeIds?: number[];
+
+  @Expose()
   @IsOptional()
   @IsEnum(StatusProject)
   status?: StatusProject;
