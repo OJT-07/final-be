@@ -50,7 +50,7 @@ export class EmployeeController {
   }
 
   @Patch(':id')
-  @UseInterceptors(FileInterceptor('image')) // You can choose to include this or not based on your requirements
+  @UseInterceptors(FileInterceptor('image', fileOption('uploads'))) // You can choose to include this or not based on your requirements
   async updateEmployee(
     @Param('id') id: number,
     @Body() updateDto: UpdateEmployeeDto,
@@ -59,18 +59,22 @@ export class EmployeeController {
 
     console.log("Entry update")
 
-    try {
-      if (image) {
-        const fileName = `${Date.now()}-${image.originalname.replace(/\s/g, '_')}`;
-        const filePath = `uploads/${fileName}`;
-        fs.promises.writeFile(filePath, image.buffer);
-        updateDto.image = filePath;
-      }
+    // try {
+    //   if (image) {
+    //     const fileName = `${Date.now()}-${image.originalname.replace(/\s/g, '_')}`;
+    //     const filePath = `uploads/${fileName}`;
+    //     fs.promises.writeFile(filePath, image.buffer);
+    //     updateDto.image = filePath;
+    //   }
 
-      const updatedEmployee = await this.employeeService.update(id, updateDto);
-      return { success: true, data: updatedEmployee };
-    } catch (error) {
-      return { success: false, error: 'Internal Server Error' };
-    }
+    //   const updatedEmployee = await this.employeeService.update(id, updateDto);
+    //   return { success: true, data: updatedEmployee };
+    // } catch (error) {
+      //   return { success: false, error: 'Internal Server Error' };
+      // }
+
+      console.log(":==========", image)
+
+       return  await this.employeeService.update(id, updateDto,image );
   }
 }

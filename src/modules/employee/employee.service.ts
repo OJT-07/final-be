@@ -44,7 +44,7 @@ export class EmployeeService {
     if (existPhone)
       throw new BadRequestException("Phone number already exists");
 
-      const newData = {...params, image: file? avtPathName('uploads', file.filename) : ''};
+      const newData = {...params, image: file? avtPathName(file.originalname) : ''};
 
     const employee = await this.employeeRepository.save(newData);
 
@@ -154,7 +154,8 @@ export class EmployeeService {
   //UPDATE
   async update(
     id: number,
-    params: UpdateEmployeeDto
+    params: UpdateEmployeeDto,
+    file: Express.Multer.File
   ): Promise<ResponseItem<EmployeeDto>> {
     const employee = await this.employeeRepository.findOne({
       where: {
@@ -169,6 +170,7 @@ export class EmployeeService {
       },
       {
         ...params,
+        image: file? avtPathName(  file.originalname) : '',
         ...plainToClass(EmployeeEntity, params, {
           excludeExtraneousValues: true,
         }),

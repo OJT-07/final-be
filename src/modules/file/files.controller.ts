@@ -5,11 +5,11 @@ import { Observable, of } from 'rxjs';
 import { FilesService } from './files.service';
 import { convertPath } from '@app/common/utils/fileUtils';
 
-@Controller('files')
+@Controller('images')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
-  @Get('/image/:filepath')
+  @Get(':filepath')
   findAvatar(@Param('filepath') filepath, @Res() res): Observable<object> {
     const path = convertPath(filepath, 'slash');
     if (fs.existsSync(path)) {
