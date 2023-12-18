@@ -15,6 +15,7 @@ import { EmployeeDto } from "./dto/employee.dto";
 import { GetEmployeesDto } from "./dto/get-employees.dto";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
 import { EmployeeEntity } from "./entities";
+import { avtPathName } from "@Constant/url";
 
 @Injectable()
 export class EmployeeService {
@@ -28,8 +29,7 @@ export class EmployeeService {
     private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
   ) {}
 
-  //CREATE
-  async create(params: CreateEmployeeDto): Promise<ResponseItem<EmployeeDto>> {
+  async create(params: CreateEmployeeDto,  file: Express.Multer.File): Promise<ResponseItem<EmployeeDto>> {
     const employeeExisted = await this.employeeRepository.findOneBy({
       name: params.name,
       deletedAt: null,
@@ -44,7 +44,9 @@ export class EmployeeService {
     if (existPhone)
       throw new BadRequestException("Phone number already exists");
 
-    const employee = await this.employeeRepository.save(params);
+      const newData = {...params, image: file? avtPathName('uploads', file.filename) : ''};
+
+    const employee = await this.employeeRepository.save(newData);
 
     return new ResponseItem(
       plainToClass(EmployeeDto, employee),
@@ -52,7 +54,6 @@ export class EmployeeService {
     );
   }
 
-  //DELETE
   async deleteUser(id: number): Promise<ResponseItem<null>> {
     const employee = await this.employeeRepository.findOneBy({
       id,

@@ -9,27 +9,16 @@ import { UpdateEmployeeDto } from "./dto/update-employee.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 
 import * as fs from 'fs';
+import { fileOption } from "@app/config/image-multer-config";
 
 @Controller("employees")
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) { }
 
   @Post()
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image', fileOption('uploads')))
   async create(@Body() createEmployeeDto: CreateEmployeeDto, @UploadedFile() image: Express.Multer.File) {
-    console.log(image); // Thông tin về file đã upload
-
-    if (image) {
- 
-      const fileName = `${createEmployeeDto.name}-${image.originalname.replace(/\s/g, '_')}`; // Replace spaces with underscores
-      const filePath = `uploads/${fileName}`;
-
-      fs.promises.writeFile(filePath, image.buffer);
-
-      createEmployeeDto.image = filePath;
-    }
-
-    const result = await this.employeeService.create(createEmployeeDto);
+    const result = await this.employeeService.create(createEmployeeDto, image);
 
     return result;
   }
