@@ -36,7 +36,7 @@ export class ProjectController {
     @Param("id", ParseIntPipe) id: number,
     @Body() updateProjectDto: UpdateProjectDto
   ) {
-    return await this.projectService.update(id, updateProjectDto);
+    return await this.projectService.edit(id, updateProjectDto);
   }
 
   //GET PROJECT BY ID CONTROLLER

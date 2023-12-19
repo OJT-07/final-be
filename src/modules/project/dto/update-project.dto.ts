@@ -1,6 +1,6 @@
 import { StatusProject } from "@Constant/enums";
 import { Expose } from "class-transformer";
-import { IsEnum, IsOptional } from "class-validator";
+import { IsArray, IsEnum, IsOptional } from "class-validator";
 export class UpdateProjectDto {
   @Expose()
   name?: string;
@@ -24,4 +24,8 @@ export class UpdateProjectDto {
   @IsOptional()
   @IsEnum(StatusProject)
   status?: StatusProject;
+
+  @Expose()
+  @IsArray()
+  members: { employeeId: number; position: string }[];
 }

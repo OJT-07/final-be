@@ -1,4 +1,3 @@
-import { StatusProject } from "@Constant/enums";
 import { ResponseItem } from "@app/common/dtos";
 import {
   BadRequestException,
@@ -10,12 +9,11 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { In, Repository } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
+import { HistoriesEntity } from "../history/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectEntity } from "./entities";
-import { HistoriesEntity } from "../history/entities";
 
 @Injectable()
 export class ProjectService {
@@ -66,6 +64,7 @@ export class ProjectService {
     });
 
     if (params.members && params.members.length > 0) {
+      let employeeArray = [];
       for (let i = 0; i < params.members.length; i++) {
         const employee = await this.employeeRepository.findOne({
           where: {
@@ -89,14 +88,110 @@ export class ProjectService {
 
         this.historiesEntity.save(createHistory);
 
-        await this.projectRepository.save({
-          ...project,
-          employees: [employee],
-        });
+        employeeArray.push(employee);
       }
+
+      await this.projectRepository.save({
+        ...project,
+        employees: employeeArray,
+      });
     }
 
     return new ResponseItem(project, "Create new data successfully");
+  }
+
+  async edit(
+    id: number,
+    params: UpdateProjectDto
+  ): Promise<ResponseItem<ProjectDto>> {
+    const projectExist = await this.projectRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["employees"],
+    });
+
+    if (!projectExist) {
+      throw new NotFoundException(`Project is not exist`);
+    }
+
+    let arrayTechnical = [];
+    for (let i = 0; i < params.technical.length; i++) {
+      arrayTechnical.push(params.technical[i].trim().toUpperCase());
+    }
+
+    const { members, ...projectDataWithoutMembers } = params;
+
+    params.technical = arrayTechnical;
+
+    if (params.members && params.members.length > 0) {
+      let employeeArray = [];
+      for (let i = 0; i < params.members.length; i++) {
+        const employee = await this.employeeRepository.findOne({
+          where: {
+            id: params.members[i].employeeId,
+          },
+        });
+
+        if (!employee) {
+          throw new NotFoundException(
+            `Employee with ID ${params.members[i].employeeId} not exists`
+          );
+        }
+
+        const newHistory = {
+          employee: employee,
+          project: projectExist,
+          position: params.members[i].position,
+        };
+
+        const createHistory = await this.historiesEntity.create(newHistory);
+
+        this.historiesEntity.save(createHistory);
+
+        employeeArray.push(employee);
+      }
+
+      // await this.projectRepository.save({
+      //   ...project,
+      //   employees: employeeArray,
+      // });
+
+      const result = await this.projectRepository.update(
+        {
+          id: projectExist.id,
+        },
+        {
+          ...projectExist,
+          ...plainToClass(UpdateProjectDto, params, {
+            excludeExtraneousValues: true,
+          }),
+          employees: employeeArray,
+        }
+      );
+      console.log(
+        "🚀 ~ file: project.service.ts:179 ~ ProjectService ~ result:",
+        result
+      );
+    }
+
+    const result = await this.projectRepository.update(
+      {
+        id: projectExist.id,
+      },
+      {
+        ...projectExist,
+        ...plainToClass(UpdateProjectDto, params, {
+          excludeExtraneousValues: true,
+        }),
+      }
+    );
+    console.log(
+      "🚀 ~ file: project.service.ts:196 ~ ProjectService ~ result:",
+      result
+    );
+
+    return new ResponseItem(projectExist, "Create new data successfully");
   }
 
   async update(
