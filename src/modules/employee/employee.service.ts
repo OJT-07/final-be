@@ -9,7 +9,7 @@ import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { Repository, SelectQueryBuilder } from "typeorm";
- 
+
 import { CreateEmployeeDto } from "./dto/create-employee.dto";
 import { EmployeeDto } from "./dto/employee.dto";
 import { GetEmployeesDto } from "./dto/get-employees.dto";
@@ -20,8 +20,6 @@ import { HistoriesEntity } from "../history/entities";
 @Injectable()
 export class EmployeeService {
   constructor(
-    private readonly configService: ConfigService,
-
     @InjectRepository(EmployeeEntity)
     private readonly employeeRepository: Repository<EmployeeEntity>,
 
@@ -71,7 +69,10 @@ export class EmployeeService {
   ): Promise<ResponsePaginate<EmployeeDto>> {
     const queryBuilder: SelectQueryBuilder<EmployeeEntity> =
       this.employeeRepository.createQueryBuilder("employees");
+
     queryBuilder
+      .leftJoinAndSelect("employees.histories", "histories")
+      .leftJoinAndSelect("histories.project", "project")
       .orderBy(`employees.${params.orderBy}`, params.order)
       .skip(params.skip)
       .take(params.take);
@@ -102,11 +103,11 @@ export class EmployeeService {
       where: {
         id,
       },
-      relations:['histories']
+      relations: ["histories"],
     });
     if (!employee) throw new BadRequestException("Employee does not exist");
 
-    return new ResponseItem(employee , "Success");
+    return new ResponseItem(employee, "Success");
 
     // const employeeDto = plainToClass(EmployeeDto, employee);
     //return new ResponseItem(employeeDto, "Success");

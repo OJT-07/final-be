@@ -1,4 +1,4 @@
-import { StatusProject } from "@Constant/enums";
+import { Order, StatusProject } from "@Constant/enums";
 import { ResponseItem } from "@app/common/dtos";
 import {
   BadRequestException,
@@ -8,7 +8,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
-import { In, Repository } from "typeorm";
+import { In, Repository, SelectQueryBuilder } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
 import { GetProjectsDto } from "./dto/get-project.dto";
@@ -33,9 +33,17 @@ export class ProjectService {
   ) {}
 
   async getProjects(): Promise<ResponseItem<ProjectDto>> {
-    const projects = await this.projectRepository.find();
+    const queryBuilder: SelectQueryBuilder<ProjectEntity> =
+      this.projectRepository.createQueryBuilder("projects");
 
-    return new ResponseItem(projects, "Get data successfully");
+    queryBuilder
+      .leftJoinAndSelect("projects.histories", "histories")
+      .leftJoinAndSelect("histories.employee", "employee")
+      .orderBy(`projects.id`, Order.DESC);
+
+    const [result, _] = await queryBuilder.getManyAndCount();
+
+    return new ResponseItem(result, "Get data successfully");
   }
 
   async create(params: CreateProjectDto): Promise<ResponseItem<ProjectDto>> {
@@ -65,6 +73,8 @@ export class ProjectService {
       }),
     });
 
+    let employeeIds = [];
+
     if (params.members && params.members.length > 0) {
       for (let i = 0; i < params.members.length; i++) {
         const employee = await this.employeeRepository.findOne({
@@ -88,12 +98,18 @@ export class ProjectService {
         const createHistory = await this.historiesEntity.create(newHistory);
 
         this.historiesEntity.save(createHistory);
-
-        await this.projectRepository.save({
-          ...project,
-          employees: [employee],
-        });
+        employeeIds.push(employee.id);
       }
+    }
+
+    if (employeeIds.length > 0) {
+      const employees = await this.employeeRepository.findBy({
+        id: In(employeeIds),
+      });
+      await this.projectRepository.save({
+        ...project,
+        employees: employees,
+      });
     }
 
     return new ResponseItem(project, "Create new data successfully");
@@ -135,16 +151,18 @@ export class ProjectService {
   }
 
   async getProject(id: number): Promise<ResponseItem<ProjectDto>> {
-    const project = await this.projectRepository.findOne({
-      where: {
-        id,
-      },
-      relations: ["employees"],
-    });
+    const project = await this.projectRepository
+      .createQueryBuilder("projects")
+      .leftJoinAndSelect("projects.histories", "histories")
+      .leftJoinAndSelect("histories.employee", "employee")
+      .where("projects.id = :id", {
+        id: id,
+      })
+      .getOne();
 
     if (!project) throw new BadRequestException("Project does not exist");
 
-    return new ResponseItem({ ...project }, "Success");
+    return new ResponseItem(project, "Success");
   }
 
   async deleteProject(id: number): Promise<ResponseItem<null>> {
