@@ -1,4 +1,4 @@
-import { Order, StatusProject } from "@Constant/enums";
+import { Order } from "@Constant/enums";
 import { ResponseItem } from "@app/common/dtos";
 import {
   BadRequestException,
@@ -10,12 +10,11 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { In, Repository, SelectQueryBuilder } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
+import { HistoriesEntity } from "../history/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectEntity } from "./entities";
-import { HistoriesEntity } from "../history/entities";
 
 @Injectable()
 export class ProjectService {
@@ -165,12 +164,16 @@ export class ProjectService {
     return new ResponseItem(project, "Success");
   }
 
+  //DELETE PROJECT
   async deleteProject(id: number): Promise<ResponseItem<null>> {
     const project = await this.projectRepository.findOneBy({
       id,
       deletedAt: null,
     });
     if (!project) throw new BadRequestException("Project does not exist");
+
+    if (project.status === "active")
+      throw new BadRequestException("Project are in inprogress!");
 
     await this.projectRepository.softDelete(id);
 
