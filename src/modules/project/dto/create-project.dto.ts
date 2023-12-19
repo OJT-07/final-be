@@ -27,5 +27,5 @@ export class CreateProjectDto {
 
   @Expose()
   @IsArray()
-  members: { employeeId: number; position: string }[];
+  members: { employeeId: number; position: string[] }[];
 }

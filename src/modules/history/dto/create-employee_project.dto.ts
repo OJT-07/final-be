@@ -1,5 +1,4 @@
 import { Expose } from "class-transformer";
-import { IsNotEmpty } from "class-validator";
 
 export class CreateEmployeeProjectDto {
   @Expose()
@@ -9,7 +8,7 @@ export class CreateEmployeeProjectDto {
   end_date: Date;
 
   @Expose()
-  position: string;
+  position: string[];
 
   @Expose()
   project: number;

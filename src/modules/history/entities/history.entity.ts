@@ -11,8 +11,8 @@ export class HistoriesEntity extends AbstractEntity {
   @Column({ nullable: true })
   end_date: Date;
 
-  @Column({ type: "varchar" })
-  position: string;
+  @Column({ type: "varchar", array: true, default: [] })
+  position: string[];
 
   @ManyToOne(() => ProjectEntity, (project) => project.histories)
   project: ProjectEntity;

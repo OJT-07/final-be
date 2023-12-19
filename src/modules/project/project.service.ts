@@ -88,10 +88,16 @@ export class ProjectService {
           );
         }
 
+        let arrayPosition = [];
+
+        params?.members[i]?.position?.map((positionItem) =>
+          arrayPosition.push(positionItem)
+        );
+
         const newHistory = {
           employee: employee,
           project: project,
-          position: params.members[i].position,
+          position: arrayPosition,
         };
 
         const createHistory = await this.historiesEntity.create(newHistory);

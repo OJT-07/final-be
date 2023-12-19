@@ -8,7 +8,7 @@ export class UpdateEmployeeProjectDto {
   end_date: Date;
 
   @Expose()
-  position: string;
+  position: string[];
 
   @Expose()
   projectId: number;
