@@ -1,4 +1,4 @@
-import { Order } from "@Constant/enums";
+import { StatusProject } from "@Constant/enums";
 import { ResponseItem } from "@app/common/dtos";
 import {
   BadRequestException,
@@ -8,13 +8,15 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
-import { In, Repository, SelectQueryBuilder } from "typeorm";
+import { Equal, In, Repository } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
-import { HistoriesEntity } from "../history/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
+import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectEntity } from "./entities";
+import { HistoriesEntity } from "../history/entities";
+import { currentTime } from "@Constant/nowDate";
 
 @Injectable()
 export class ProjectService {
@@ -32,17 +34,9 @@ export class ProjectService {
   ) {}
 
   async getProjects(): Promise<ResponseItem<ProjectDto>> {
-    const queryBuilder: SelectQueryBuilder<ProjectEntity> =
-      this.projectRepository.createQueryBuilder("projects");
+    const projects = await this.projectRepository.find();
 
-    queryBuilder
-      .leftJoinAndSelect("projects.histories", "histories")
-      .leftJoinAndSelect("histories.employee", "employee")
-      .orderBy(`projects.id`, Order.DESC);
-
-    const [result, _] = await queryBuilder.getManyAndCount();
-
-    return new ResponseItem(result, "Get data successfully");
+    return new ResponseItem(projects, "Get data successfully");
   }
 
   async create(params: CreateProjectDto): Promise<ResponseItem<ProjectDto>> {
@@ -72,8 +66,6 @@ export class ProjectService {
       }),
     });
 
-    let employeeIds = [];
-
     if (params.members && params.members.length > 0) {
       for (let i = 0; i < params.members.length; i++) {
         const employee = await this.employeeRepository.findOne({
@@ -88,33 +80,21 @@ export class ProjectService {
           );
         }
 
-        let arrayPosition = [];
-
-        params?.members[i]?.position?.map((positionItem) =>
-          arrayPosition.push(positionItem)
-        );
-
         const newHistory = {
           employee: employee,
           project: project,
-          position: arrayPosition,
+          position: params.members[i].position,
         };
 
         const createHistory = await this.historiesEntity.create(newHistory);
 
         this.historiesEntity.save(createHistory);
-        employeeIds.push(employee.id);
-      }
-    }
 
-    if (employeeIds.length > 0) {
-      const employees = await this.employeeRepository.findBy({
-        id: In(employeeIds),
-      });
-      await this.projectRepository.save({
-        ...project,
-        employees: employees,
-      });
+        await this.projectRepository.save({
+          ...project,
+          employees: [employee],
+        });
+      }
     }
 
     return new ResponseItem(project, "Create new data successfully");
@@ -155,31 +135,140 @@ export class ProjectService {
     return new ResponseItem(result, "Update data successfully");
   }
 
+  async assignEmployee(
+    id: number,
+    params: UpdateProjectDto
+  ): Promise<ResponseItem<ProjectDto>> {
+    const project = await this.projectRepository.findOne({
+      where: { id, deletedAt: null },
+      relations: ["employees", "histories"],
+    });
+    if (!project) throw new BadRequestException("Vai trò không tồn tại");
+
+    const employees = await this.employeeRepository.findBy({
+      id: In(params.employeeIds),
+    });
+
+    let originalEmployee = project?.employees.map(({ id }) => id);
+    const updatedEmployee = employees.map(({ id }) => id);
+
+    type diffDetail = {
+      added: number[];
+      subtracted: number[];
+    };
+
+    const differenceItem: number[] = updatedEmployee
+      .filter((x) => !originalEmployee.includes(x))
+      .concat(originalEmployee.filter((x) => !updatedEmployee.includes(x)));
+
+    let diffDetail: diffDetail = {
+      added: [],
+      subtracted: [],
+    };
+
+    differenceItem.forEach((id) => {
+      if (updatedEmployee.includes(id)) {
+        return (diffDetail = {
+          ...diffDetail,
+          added: [...diffDetail.added, id],
+        });
+      }
+      return (diffDetail = {
+        ...diffDetail,
+        subtracted: [...diffDetail.subtracted, id],
+      });
+    });
+
+    if (diffDetail?.subtracted.length > 0) {
+      const subtractedArr = project?.employees.reduce<number[]>(
+        (pre, current) => {
+          if (!diffDetail.subtracted.includes(current.id)) {
+            return [...pre, current.id];
+          }
+          return pre;
+        },
+        []
+      );
+
+      const promises = diffDetail.subtracted.map(async (id) => {
+        const history = await this.historiesEntity
+          .createQueryBuilder("histories")
+          .leftJoinAndSelect("histories.employee", "employee")
+          .where("employee.id = :id", { id: id })
+          .getOne();
+
+        this.historiesEntity.save({
+          ...history,
+          ...plainToClass(UpdateProjectDto, params, {
+            excludeExtraneousValues: true,
+          }),
+          end_date: currentTime(),
+        });
+      });
+
+      await Promise.all(promises);
+      originalEmployee = subtractedArr;
+    }
+
+    if (diffDetail?.added.length > 0) {
+      diffDetail?.added.forEach(async (id) => {
+        const employee = await this.employeeRepository
+          .createQueryBuilder("employees")
+          .where("employees.id = :id", { id: id })
+          .getOne();
+
+        const newHistory = {
+          employee: employee,
+          project: project,
+          position: ["PM"],
+        };
+
+        const createHistory = await this.historiesEntity.create(newHistory);
+
+        this.historiesEntity.save(createHistory);
+      });
+
+      originalEmployee = originalEmployee.concat(
+        diffDetail?.added.filter((item) => originalEmployee.indexOf(item) < 0)
+      );
+    }
+
+    const arrayTechnical = params?.technical?.map((item) =>
+      item.trim().toUpperCase()
+    );
+
+    const assignEmployees = await this.employeeRepository.findBy({
+      id: In(originalEmployee),
+    });
+
+    const result = await this.projectRepository.save({
+      ...project,
+      technical: arrayTechnical,
+      employees: assignEmployees,
+    });
+
+    return new ResponseItem(result, "Cập nhật dữ liệu thành công");
+  }
+
   async getProject(id: number): Promise<ResponseItem<ProjectDto>> {
-    const project = await this.projectRepository
-      .createQueryBuilder("projects")
-      .leftJoinAndSelect("projects.histories", "histories")
-      .leftJoinAndSelect("histories.employee", "employee")
-      .where("projects.id = :id", {
-        id: id,
-      })
-      .getOne();
+    const project = await this.projectRepository.findOne({
+      where: {
+        id,
+      },
+      relations: ["employees", "histories"],
+    });
 
     if (!project) throw new BadRequestException("Project does not exist");
 
-    return new ResponseItem(project, "Success");
+    return new ResponseItem({ ...project }, "Success");
   }
 
-  //DELETE PROJECT
   async deleteProject(id: number): Promise<ResponseItem<null>> {
     const project = await this.projectRepository.findOneBy({
       id,
       deletedAt: null,
     });
     if (!project) throw new BadRequestException("Project does not exist");
-
-    if (project.status === "active")
-      throw new BadRequestException("Project are in inprogress!");
 
     await this.projectRepository.softDelete(id);
 

@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
 } from "@nestjs/common";
@@ -31,12 +32,12 @@ export class ProjectController {
   }
 
   //UPDATE PROJECT CONTROLLER
-  @Put(":id")
+  @Patch(":id")
   async updateProject(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateProjectDto: UpdateProjectDto
   ) {
-    return await this.projectService.update(id, updateProjectDto);
+    return await this.projectService.assignEmployee(id, updateProjectDto);
   }
 
   //GET PROJECT BY ID CONTROLLER
