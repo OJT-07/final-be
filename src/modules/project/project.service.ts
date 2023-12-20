@@ -130,6 +130,8 @@ export class ProjectService {
       subtracted: [],
     };
 
+   
+
     differenceItem.forEach((id) => {
       if (updatedEmployee.includes(id)) {
         return (diffDetail = {
@@ -142,6 +144,8 @@ export class ProjectService {
         subtracted: [...diffDetail.subtracted, id],
       });
     });
+
+ 
 
     if (diffDetail?.subtracted.length > 0) {
       const subtractedArr = project?.employees.reduce<number[]>(
@@ -181,13 +185,19 @@ export class ProjectService {
       description: params.description,
     });
 
+    console.log("diffDetail", diffDetail)
+
     if (diffDetail?.subtracted.length > 0) {
-      const promises = diffDetail.subtracted.map(async (employeeId) => {
+       diffDetail.subtracted.forEach(async (employeeId) => {
+        const employee = await this.employeeRepository.findOne({where:{id: employeeId}})
         const history = await this.historiesEntity
           .createQueryBuilder("histories")
           .leftJoinAndSelect("histories.employee", "employee")
           .where("employee.id = :id", { id: employeeId })
+          .andWhere("histories.join_date = :updatedAt", {updatedAt: employee.updatedAt})
           .getOne();
+
+      
 
         await this.historiesEntity.save({
           ...history,
@@ -198,7 +208,7 @@ export class ProjectService {
         });
       });
 
-      await Promise.all(promises);
+      
     }
 
     if (diffDetail?.added.length > 0) {
@@ -212,11 +222,19 @@ export class ProjectService {
           ({ employeeId }) => Number(employeeId) === Number(addedEmployeeId)
         );
 
+        await this.employeeRepository.save({
+          ...employee,
+          updatedAt : currentTime() 
+        });
+
         const createHistory = await this.historiesEntity.create({
           employee,
           project: result,
           position: positions.position,
+          join_date : currentTime() 
         });
+
+      
 
         await this.historiesEntity.save(createHistory);
       });
