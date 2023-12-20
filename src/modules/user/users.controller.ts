@@ -47,4 +47,9 @@ export class UsersController {
   async login(@Body() loginUserDto) {
     return await this.usersService.login(loginUserDto);
   }
+
+  @Post("me")
+  async me(@Body() data) {
+    return await this.usersService.aboutMe(data);
+  }
 }

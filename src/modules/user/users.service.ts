@@ -3,7 +3,7 @@ import { hashPassword } from "@Constant/hash-password";
 import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
+import { JsonWebTokenError, JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcrypt";
 import { plainToClass } from "class-transformer";
@@ -76,8 +76,7 @@ export class UsersService {
 
     // Generate JWT token
     const token = this.jwtService.sign({
-      sub: userExisted.id,
-      username: userExisted.phone,
+      id: userExisted.id,
     });
 
     return new ResponseItem({ token }, "Login successful");
@@ -127,8 +126,33 @@ export class UsersService {
       },
     });
     if (!user) throw new BadRequestException("User does not exist");
-
     return new ResponseItem({ ...user }, "Success");
+  }
+
+  async aboutMe(data): Promise<ResponseItem<UserDto>> {
+    try {
+      // Decode the token (without verifying the signature)
+      const decodedToken = this.jwtService.decode(data.token);
+
+      const user = await this.userRepository.findOne({
+        where: {
+          id: Number(decodedToken?.id),
+        },
+      });
+
+      if (!user) {
+        throw new BadRequestException("User does not exist");
+      }
+
+      return new ResponseItem({ ...user }, "Success");
+    } catch (error) {
+      if (error instanceof JsonWebTokenError) {
+        throw new BadRequestException("Invalid token");
+      }
+
+      // Handle other errors as needed
+      throw error;
+    }
   }
 }
 async function comparePassword(
