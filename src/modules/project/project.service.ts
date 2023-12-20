@@ -88,7 +88,7 @@ export class ProjectService {
 
         const createHistory = await this.historiesEntity.create(newHistory);
 
-        this.historiesEntity.save(createHistory);
+        await this.historiesEntity.save(createHistory);
 
         await this.projectRepository.save({
           ...project,
@@ -143,7 +143,7 @@ export class ProjectService {
       where: { id, deletedAt: null },
       relations: ["employees", "histories"],
     });
-    if (!project) throw new BadRequestException("Vai trò không tồn tại");
+    if (!project) throw new BadRequestException("Project not found");
 
     const employees = await this.employeeRepository.findBy({
       id: In(params.employeeIds),
@@ -189,45 +189,10 @@ export class ProjectService {
         },
         []
       );
-
-      const promises = diffDetail.subtracted.map(async (id) => {
-        const history = await this.historiesEntity
-          .createQueryBuilder("histories")
-          .leftJoinAndSelect("histories.employee", "employee")
-          .where("employee.id = :id", { id: id })
-          .getOne();
-
-        this.historiesEntity.save({
-          ...history,
-          ...plainToClass(UpdateProjectDto, params, {
-            excludeExtraneousValues: true,
-          }),
-          end_date: currentTime(),
-        });
-      });
-
-      await Promise.all(promises);
       originalEmployee = subtractedArr;
     }
 
     if (diffDetail?.added.length > 0) {
-      diffDetail?.added.forEach(async (id) => {
-        const employee = await this.employeeRepository
-          .createQueryBuilder("employees")
-          .where("employees.id = :id", { id: id })
-          .getOne();
-
-        const newHistory = {
-          employee: employee,
-          project: project,
-          position: ["PM"],
-        };
-
-        const createHistory = await this.historiesEntity.create(newHistory);
-
-        this.historiesEntity.save(createHistory);
-      });
-
       originalEmployee = originalEmployee.concat(
         diffDetail?.added.filter((item) => originalEmployee.indexOf(item) < 0)
       );
@@ -246,6 +211,42 @@ export class ProjectService {
       technical: arrayTechnical,
       employees: assignEmployees,
     });
+
+    if (diffDetail?.subtracted.length > 0) {
+      const promises = diffDetail.subtracted.map(async (id) => {
+        const history = await this.historiesEntity
+          .createQueryBuilder("histories")
+          .leftJoinAndSelect("histories.employee", "employee")
+          .where("employee.id = :id", { id: id })
+          .getOne();
+
+        await this.historiesEntity.save({
+          ...history,
+          ...plainToClass(UpdateProjectDto, params, {
+            excludeExtraneousValues: true,
+          }),
+          end_date: currentTime(),
+        });
+      });
+
+      await Promise.all(promises);
+    }
+
+    if (diffDetail?.added.length > 0) {
+      diffDetail?.added.forEach(async (employeeId) => {
+        const employee = await this.employeeRepository
+          .createQueryBuilder("employees")
+          .where("employees.id = :id", { id: employeeId })
+          .getOne();
+        const createHistory = await this.historiesEntity.create({
+          employee,
+          project: result,
+          position: ["PM"],
+        });
+
+        await this.historiesEntity.save(createHistory);
+      });
+    }
 
     return new ResponseItem(result, "Cập nhật dữ liệu thành công");
   }
