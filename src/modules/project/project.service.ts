@@ -1,4 +1,4 @@
-import { StatusProject } from "@Constant/enums";
+import { currentTime } from "@Constant/nowDate";
 import { ResponseItem } from "@app/common/dtos";
 import {
   BadRequestException,
@@ -8,15 +8,13 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
-import { Equal, In, Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
+import { HistoriesEntity } from "../history/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectEntity } from "./entities";
-import { HistoriesEntity } from "../history/entities";
-import { currentTime } from "@Constant/nowDate";
 
 @Injectable()
 export class ProjectService {
@@ -131,6 +129,10 @@ export class ProjectService {
       }),
       employees,
     });
+
+    if (!result) {
+      throw new BadRequestException("Project update date fail!");
+    }
 
     return new ResponseItem(result, "Update data successfully");
   }
@@ -270,6 +272,9 @@ export class ProjectService {
     });
     if (!project) throw new BadRequestException("Project does not exist");
 
+    if (project.status === "active") {
+      throw new BadRequestException("Project in progress");
+    }
     await this.projectRepository.softDelete(id);
 
     return new ResponseItem(null, "Delete Project successfully");
