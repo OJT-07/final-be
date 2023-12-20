@@ -174,21 +174,19 @@ export class ProjectService {
       ...project,
       technical: arrayTechnical,
       employees: assignEmployees,
-      status: params.status ? params.status : project.status,
-      name: params.name ? params.name : project.name,
-      start_date: params.start_date ? params.start_date : project.start_date,
-      end_date: params.end_date ? params.end_date : project.end_date,
-      description: params.description
-        ? params.description
-        : project.description,
+      status: params.status,
+      name: params.name,
+      start_date: params.start_date,
+      end_date: params.end_date,
+      description: params.description,
     });
 
     if (diffDetail?.subtracted.length > 0) {
-      const promises = diffDetail.subtracted.map(async (id) => {
+      const promises = diffDetail.subtracted.map(async (employeeId) => {
         const history = await this.historiesEntity
           .createQueryBuilder("histories")
           .leftJoinAndSelect("histories.employee", "employee")
-          .where("employee.id = :id", { id: id })
+          .where("employee.id = :id", { id: employeeId })
           .getOne();
 
         await this.historiesEntity.save({
