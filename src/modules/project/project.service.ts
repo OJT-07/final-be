@@ -98,45 +98,6 @@ export class ProjectService {
     return new ResponseItem(project, "Create new data successfully");
   }
 
-  async update(
-    id: number,
-    params: UpdateProjectDto
-  ): Promise<ResponseItem<ProjectDto>> {
-    const project = await this.projectRepository.findOne({
-      where: {
-        id,
-      },
-      relations: ["employees"],
-    });
-
-    if (!project) {
-      throw new NotFoundException(`Project not found`);
-    }
-
-    const arrayTechnical = params?.technical?.map((item) =>
-      item.trim().toUpperCase()
-    );
-
-    const employees = await this.employeeRepository.findBy({
-      id: In(params.employeeIds),
-    });
-
-    const result = await this.projectRepository.save({
-      ...project,
-      technical: arrayTechnical,
-      ...plainToClass(UpdateProjectDto, params, {
-        excludeExtraneousValues: true,
-      }),
-      employees,
-    });
-
-    if (!result) {
-      throw new BadRequestException("Project update date fail!");
-    }
-
-    return new ResponseItem(result, "Update data successfully");
-  }
-
   async assignEmployee(
     id: number,
     params: UpdateProjectDto
@@ -147,8 +108,9 @@ export class ProjectService {
     });
     if (!project) throw new BadRequestException("Project not found");
 
+    const employeeIds = params.members?.map((item) => item.employeeId);
     const employees = await this.employeeRepository.findBy({
-      id: In(params.employeeIds),
+      id: In(employeeIds),
     });
 
     let originalEmployee = project?.employees.map(({ id }) => id);
@@ -235,31 +197,36 @@ export class ProjectService {
     }
 
     if (diffDetail?.added.length > 0) {
-      diffDetail?.added.forEach(async (employeeId) => {
+      diffDetail?.added.forEach(async (addedEmployeeId) => {
         const employee = await this.employeeRepository
           .createQueryBuilder("employees")
-          .where("employees.id = :id", { id: employeeId })
+          .where("employees.id = :id", { id: addedEmployeeId })
           .getOne();
+
+        const positions = params.members?.find(
+          ({ employeeId }) => Number(employeeId) === Number(addedEmployeeId)
+        );
+
         const createHistory = await this.historiesEntity.create({
           employee,
           project: result,
-          position: params.position,
+          position: positions.position,
         });
 
         await this.historiesEntity.save(createHistory);
       });
     }
 
-    return new ResponseItem(result, "Cập nhật dữ liệu thành công");
+    return new ResponseItem(result, "Update success");
   }
 
   async getProject(id: number): Promise<ResponseItem<ProjectDto>> {
-    const project = await this.projectRepository.findOne({
-      where: {
-        id,
-      },
-      relations: ["employees", "histories"],
-    });
+    const project = await this.projectRepository
+      .createQueryBuilder("projects")
+      .leftJoinAndSelect("projects.histories", "histories")
+      .leftJoinAndSelect("histories.employee", "employee")
+      .where("projects.id = :id", { id: id })
+      .getOne();
 
     if (!project) throw new BadRequestException("Project does not exist");
 
