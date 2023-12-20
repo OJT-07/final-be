@@ -243,7 +243,7 @@ export class ProjectService {
         const createHistory = await this.historiesEntity.create({
           employee,
           project: result,
-          position: ["PM"],
+          position: params.position,
         });
 
         await this.historiesEntity.save(createHistory);

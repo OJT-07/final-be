@@ -18,6 +18,9 @@ export class UpdateProjectDto {
   technical?: string[];
 
   @Expose()
+  position: string[];
+
+  @Expose()
   employeeIds?: number[];
 
   @Expose()
