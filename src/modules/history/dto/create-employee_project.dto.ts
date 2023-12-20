@@ -1,6 +1,6 @@
 import { Expose } from "class-transformer";
 
-export class UpdateEmployeeProjectDto {
+export class CreateEmployeeProjectDto {
   @Expose()
   join_date: Date;
 
@@ -8,11 +8,11 @@ export class UpdateEmployeeProjectDto {
   end_date: Date;
 
   @Expose()
-  position: string;
+  position: string[];
 
   @Expose()
-  projectId: number;
+  project: number;
 
   @Expose()
-  employeeId: number;
+  employee: number;
 }

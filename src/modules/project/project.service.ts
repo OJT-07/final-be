@@ -1,4 +1,4 @@
-import { StatusProject } from "@Constant/enums";
+import { currentTime } from "@Constant/nowDate";
 import { ResponseItem } from "@app/common/dtos";
 import {
   BadRequestException,
@@ -8,11 +8,10 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { EmployeeEntity } from "../employee/entities";
-import { EmployeeProjectEntity } from "../employee_project/entities";
+import { HistoriesEntity } from "../history/entities";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectEntity } from "./entities";
@@ -28,22 +27,16 @@ export class ProjectService {
     @InjectRepository(EmployeeEntity)
     private readonly employeeRepository: Repository<EmployeeEntity>,
 
-    @InjectRepository(EmployeeProjectEntity)
-    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
+    @InjectRepository(HistoriesEntity)
+    private readonly historiesEntity: Repository<HistoriesEntity>
   ) {}
 
-  //GET PROJECTS LIST
-  async getProjects(params: GetProjectsDto): Promise<ResponseItem<ProjectDto>> {
-    const statusArray = params.status
-      ? [params.status]
-      : [StatusProject.ACTIVE, StatusProject.PENDING, StatusProject.DONE];
-
+  async getProjects(): Promise<ResponseItem<ProjectDto>> {
     const projects = await this.projectRepository.find();
 
     return new ResponseItem(projects, "Get data successfully");
   }
 
-  //CREATE PROJECT
   async create(params: CreateProjectDto): Promise<ResponseItem<ProjectDto>> {
     const projectExist = await this.projectRepository.findOne({
       where: {
@@ -66,120 +59,190 @@ export class ProjectService {
 
     const project = await this.projectRepository.save({
       ...projectDataWithoutMembers,
-      // Use plainToClass with ProjectDto instead of CreateProjectDto
       ...plainToClass(ProjectDto, projectDataWithoutMembers, {
         excludeExtraneousValues: true,
       }),
     });
 
     if (params.members && params.members.length > 0) {
-      const promises = params.members.map(async (member) => {
-        const employee = await this.employeeRepository.find({
+      for (let i = 0; i < params.members.length; i++) {
+        const employee = await this.employeeRepository.findOne({
           where: {
-            id: member.employeeId,
+            id: params.members[i].employeeId,
           },
         });
 
-        if (employee === null) {
-          console.log(`Employee with ID ${member.employeeId} not exists`);
+        if (!employee) {
+          throw new NotFoundException(
+            `Employee with ID ${params.members[i].employeeId} not exists`
+          );
         }
 
-        const createEmployeeInProject =
-          await this.employeeProjectRepository.create({
-            employeeId: member.employeeId,
-            projectId: Number(project.id),
-            position: member.position,
-          });
+        const newHistory = {
+          employee: employee,
+          project: project,
+          position: params.members[i].position,
+        };
 
-        this.employeeProjectRepository.save(createEmployeeInProject);
-      });
+        const createHistory = await this.historiesEntity.create(newHistory);
 
-      // Wait for all promises to resolve before moving on
-      await Promise.all(promises);
+        await this.historiesEntity.save(createHistory);
+
+        await this.projectRepository.save({
+          ...project,
+          employees: [employee],
+        });
+      }
     }
 
     return new ResponseItem(project, "Create new data successfully");
   }
 
-  // UPDATE PROJECT
-  async update(
+  async assignEmployee(
     id: number,
     params: UpdateProjectDto
   ): Promise<ResponseItem<ProjectDto>> {
     const project = await this.projectRepository.findOne({
-      where: {
-        id,
-      },
+      where: { id, deletedAt: null },
+      relations: ["employees", "histories"],
+    });
+    if (!project) throw new BadRequestException("Project not found");
+
+    const employeeIds = params.members?.map((item) => item.employeeId);
+    const employees = await this.employeeRepository.findBy({
+      id: In(employeeIds),
     });
 
-    if (!project) {
-      throw new NotFoundException(`Project not found`);
+    let originalEmployee = project?.employees.map(({ id }) => id);
+    const updatedEmployee = employees.map(({ id }) => id);
+
+    type diffDetail = {
+      added: number[];
+      subtracted: number[];
+    };
+
+    const differenceItem: number[] = updatedEmployee
+      .filter((x) => !originalEmployee.includes(x))
+      .concat(originalEmployee.filter((x) => !updatedEmployee.includes(x)));
+
+    let diffDetail: diffDetail = {
+      added: [],
+      subtracted: [],
+    };
+
+    differenceItem.forEach((id) => {
+      if (updatedEmployee.includes(id)) {
+        return (diffDetail = {
+          ...diffDetail,
+          added: [...diffDetail.added, id],
+        });
+      }
+      return (diffDetail = {
+        ...diffDetail,
+        subtracted: [...diffDetail.subtracted, id],
+      });
+    });
+
+    if (diffDetail?.subtracted.length > 0) {
+      const subtractedArr = project?.employees.reduce<number[]>(
+        (pre, current) => {
+          if (!diffDetail.subtracted.includes(current.id)) {
+            return [...pre, current.id];
+          }
+          return pre;
+        },
+        []
+      );
+      originalEmployee = subtractedArr;
     }
 
-    let arrayTechnical = [];
-
-    if (params.technical) {
-      for (let i = 0; i < params.technical.length; i++) {
-        arrayTechnical.push(params.technical[i].trim().toUpperCase());
-      }
-      params.technical = arrayTechnical;
+    if (diffDetail?.added.length > 0) {
+      originalEmployee = originalEmployee.concat(
+        diffDetail?.added.filter((item) => originalEmployee.indexOf(item) < 0)
+      );
     }
 
-    // Perform the update
-    await this.projectRepository.update(
-      {
-        id: project.id,
-      },
-      {
-        ...params,
-        // Use plainToClass with ProjectDto instead of CreateProjectDto
-        ...plainToClass(ProjectEntity, params, {
-          excludeExtraneousValues: true,
-        }),
-      }
+    const arrayTechnical = params?.technical?.map((item) =>
+      item.trim().toUpperCase()
     );
 
-    // Retrieve the updated project
-    const updatedProject = await this.projectRepository.findOne({
-      where: {
-        id,
-      },
+    const assignEmployees = await this.employeeRepository.findBy({
+      id: In(originalEmployee),
     });
 
-    if (!updatedProject) {
-      throw new NotFoundException(`Error retrieving updated project`);
+    const result = await this.projectRepository.save({
+      ...project,
+      technical: arrayTechnical,
+      employees: assignEmployees,
+    });
+
+    if (diffDetail?.subtracted.length > 0) {
+      const promises = diffDetail.subtracted.map(async (id) => {
+        const history = await this.historiesEntity
+          .createQueryBuilder("histories")
+          .leftJoinAndSelect("histories.employee", "employee")
+          .where("employee.id = :id", { id: id })
+          .getOne();
+
+        await this.historiesEntity.save({
+          ...history,
+          ...plainToClass(UpdateProjectDto, params, {
+            excludeExtraneousValues: true,
+          }),
+          end_date: currentTime(),
+        });
+      });
+
+      await Promise.all(promises);
     }
 
-    return new ResponseItem(updatedProject, "Update data successfully");
+    if (diffDetail?.added.length > 0) {
+      diffDetail?.added.forEach(async (addedEmployeeId) => {
+        const employee = await this.employeeRepository
+          .createQueryBuilder("employees")
+          .where("employees.id = :id", { id: addedEmployeeId })
+          .getOne();
+
+        const positions = params.members?.find(
+          ({ employeeId }) => Number(employeeId) === Number(addedEmployeeId)
+        );
+
+        const createHistory = await this.historiesEntity.create({
+          employee,
+          project: result,
+          position: positions.position,
+        });
+
+        await this.historiesEntity.save(createHistory);
+      });
+    }
+
+    return new ResponseItem(result, "Update success");
   }
 
-  //GET PROJECT BY ID
   async getProject(id: number): Promise<ResponseItem<ProjectDto>> {
-    const project = await this.projectRepository.findOne({
-      where: {
-        id,
-      },
-    });
-
-    const employeesInProject = await this.employeeProjectRepository.find({
-      where: {
-        projectId: id,
-      },
-    });
+    const project = await this.projectRepository
+      .createQueryBuilder("projects")
+      .leftJoinAndSelect("projects.histories", "histories")
+      .leftJoinAndSelect("histories.employee", "employee")
+      .where("projects.id = :id", { id: id })
+      .getOne();
 
     if (!project) throw new BadRequestException("Project does not exist");
 
-    return new ResponseItem({ ...project, employeesInProject }, "Success");
+    return new ResponseItem({ ...project }, "Success");
   }
 
-  //DELETE PROJECT BY ID
   async deleteProject(id: number): Promise<ResponseItem<null>> {
-    const user = await this.projectRepository.findOneBy({
+    const project = await this.projectRepository.findOneBy({
       id,
       deletedAt: null,
     });
-    if (!user) throw new BadRequestException("User does not exist");
+    if (!project) throw new BadRequestException("Project does not exist");
 
+    if (project.status === "active") {
+      throw new BadRequestException("Project in progress");
+    }
     await this.projectRepository.softDelete(id);
 
     return new ResponseItem(null, "Delete Project successfully");

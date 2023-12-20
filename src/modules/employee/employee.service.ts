@@ -5,11 +5,11 @@ import {
 } from "@nestjs/common";
 
 import { PageMetaDto, ResponseItem, ResponsePaginate } from "@app/common/dtos";
-import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToClass } from "class-transformer";
 import { Repository, SelectQueryBuilder } from "typeorm";
-import { EmployeeProjectEntity } from "../employee_project/entities";
+
+import { HistoriesEntity } from "../history/entities";
 import { CreateEmployeeDto } from "./dto/create-employee.dto";
 import { EmployeeDto } from "./dto/employee.dto";
 import { GetEmployeesDto } from "./dto/get-employees.dto";
@@ -19,13 +19,11 @@ import { EmployeeEntity } from "./entities";
 @Injectable()
 export class EmployeeService {
   constructor(
-    private readonly configService: ConfigService,
-
     @InjectRepository(EmployeeEntity)
     private readonly employeeRepository: Repository<EmployeeEntity>,
 
-    @InjectRepository(EmployeeProjectEntity)
-    private readonly employeeProjectRepository: Repository<EmployeeProjectEntity>
+    @InjectRepository(HistoriesEntity)
+    private readonly historiesRepository: Repository<HistoriesEntity>
   ) {}
 
   //CREATE
@@ -52,25 +50,38 @@ export class EmployeeService {
     );
   }
 
-  //DELETE
+  //DELETE EMPLOYEE
   async deleteUser(id: number): Promise<ResponseItem<null>> {
-    const employee = await this.employeeRepository.findOneBy({
-      id,
-      deletedAt: null,
-    });
-    if (!employee) throw new BadRequestException("Employee does not exist");
+    const queryBuilder: SelectQueryBuilder<EmployeeEntity> =
+      this.employeeRepository.createQueryBuilder("employees");
 
-    await this.employeeRepository.softDelete(id);
+    queryBuilder
+      .leftJoinAndSelect("employees.histories", "histories")
+      .leftJoinAndSelect("histories.project", "project")
+      .andWhere("employees.id = :id", { id: id })
+      .andWhere("employees.deletedAt IS NULL")
+      .andWhere("project.status = :status", { status: "active" });
 
-    return new ResponseItem(null, "Delete employee successfully");
+    const [result, total] = await queryBuilder.getManyAndCount();
+
+    if (!result || result.length === 0) {
+      await this.employeeRepository.softDelete(id);
+      return new ResponseItem(null, "Delete employee successfully");
+    }
+
+    throw new BadRequestException("Can not remove this employee.");
   }
 
+  //GET ALL EMPLOYEE
   async getEmployees(
     params: GetEmployeesDto
   ): Promise<ResponsePaginate<EmployeeDto>> {
     const queryBuilder: SelectQueryBuilder<EmployeeEntity> =
       this.employeeRepository.createQueryBuilder("employees");
+
     queryBuilder
+      .leftJoinAndSelect("employees.histories", "histories")
+      .leftJoinAndSelect("histories.project", "project")
       .orderBy(`employees.${params.orderBy}`, params.order)
       .skip(params.skip)
       .take(params.take);
@@ -97,27 +108,25 @@ export class EmployeeService {
 
   //GET BY ID
   async getEmployee(id: number): Promise<ResponseItem<EmployeeDto>> {
-    const employee = await this.employeeRepository.findOne({
-      where: {
-        id,
-      },
-    });
-    if (!employee) throw new BadRequestException("Employee does not exist");
+    const queryBuilder: SelectQueryBuilder<EmployeeEntity> =
+      this.employeeRepository.createQueryBuilder("employees");
 
-    const projectsEmployeeJoined = await this.employeeProjectRepository.find({
-      where: {
-        employeeId: id,
-      },
-    });
+    queryBuilder
+      .leftJoinAndSelect("employees.histories", "histories")
+      .leftJoinAndSelect("histories.project", "project")
+      .andWhere("employees.id = :id", { id: id })
+      .andWhere("employees.deletedAt IS NULL");
 
-    return new ResponseItem({ ...employee, projectsEmployeeJoined }, "Success");
+    const [result, total] = await queryBuilder.getManyAndCount();
 
-    // const employeeDto = plainToClass(EmployeeDto, employee);
-    //return new ResponseItem(employeeDto, "Success");
+    if (!result || result.length === 0) {
+      throw new BadRequestException("No matching records found.");
+    }
+
+    return new ResponseItem(result, "Success");
   }
 
   // Get Manager
-
   async getManagers(
     params: GetEmployeesDto
   ): Promise<ResponsePaginate<EmployeeDto>> {
@@ -137,7 +146,6 @@ export class EmployeeService {
 
     const [result, total] = await queryBuilder.getManyAndCount();
 
-    // Thêm logic để load thông tin quản lý
     const employeesDto = result.map((employee) => {
       return plainToClass(EmployeeDto, employee);
     });
@@ -160,6 +168,7 @@ export class EmployeeService {
         id,
       },
     });
+
     if (!employee) throw new NotFoundException("Employee not found");
 
     await this.employeeRepository.update(

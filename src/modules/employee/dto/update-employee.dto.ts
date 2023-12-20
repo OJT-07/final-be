@@ -1,6 +1,4 @@
-
 import { Expose } from "class-transformer";
-import { IsNotEmpty } from "class-validator";
 
 export class UpdateEmployeeDto {
   @Expose()
@@ -15,11 +13,10 @@ export class UpdateEmployeeDto {
   @Expose()
   skills: [
     {
-        name: string,
-        exp: string
+      name: string;
+      exp: string;
     }
   ];
-
 
   @Expose()
   isManager: boolean;

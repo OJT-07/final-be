@@ -6,12 +6,11 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
-  Query,
 } from "@nestjs/common";
 import { CreateProjectDto } from "./dto/create-project.dto";
-import { GetProjectsDto } from "./dto/get-project.dto";
 import { ProjectDto } from "./dto/project.dto";
 import { UpdateProjectDto } from "./dto/update-project.dto";
 import { ProjectService } from "./project.service";
@@ -22,10 +21,8 @@ export class ProjectController {
 
   //GET PROJECT CONTROLLER
   @Get()
-  async getProjects(
-    @Query() getProjectsDto: GetProjectsDto
-  ): Promise<ResponseItem<ProjectDto>> {
-    return await this.projectService.getProjects(getProjectsDto);
+  async getProjects(): Promise<ResponseItem<ProjectDto>> {
+    return await this.projectService.getProjects();
   }
 
   //POST PROJECT CONTROLLER
@@ -35,12 +32,12 @@ export class ProjectController {
   }
 
   //UPDATE PROJECT CONTROLLER
-  @Put(":id")
+  @Patch(":id")
   async updateProject(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateProjectDto: UpdateProjectDto
   ) {
-    return await this.projectService.update(id, updateProjectDto);
+    return await this.projectService.assignEmployee(id, updateProjectDto);
   }
 
   //GET PROJECT BY ID CONTROLLER

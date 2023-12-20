@@ -3,16 +3,17 @@ import { ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { EmployeeEntity } from "../employee/entities";
-import { EmployeeProjectEntity } from "../employee_project/entities";
+ 
 import { ProjectEntity } from "./entities";
 import { ProjectController } from "./project.controller";
 import { ProjectService } from "./project.service";
+import { HistoriesEntity } from "../history/entities";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       ProjectEntity,
-      EmployeeProjectEntity,
+      HistoriesEntity,
       EmployeeEntity,
     ]),
   ],
