@@ -174,6 +174,7 @@ export class ProjectService {
       ...project,
       technical: arrayTechnical,
       employees: assignEmployees,
+      status: params.status ? params.status : project.status,
     });
 
     if (diffDetail?.subtracted.length > 0) {
