@@ -175,6 +175,12 @@ export class ProjectService {
       technical: arrayTechnical,
       employees: assignEmployees,
       status: params.status ? params.status : project.status,
+      name: params.name ? params.name : project.name,
+      start_date: params.start_date ? params.start_date : project.start_date,
+      end_date: params.end_date ? params.end_date : project.end_date,
+      description: params.description
+        ? params.description
+        : project.description,
     });
 
     if (diffDetail?.subtracted.length > 0) {
